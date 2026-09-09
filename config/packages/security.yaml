@@ -28,8 +28,11 @@ security:
             form_login:
                 login_path: app_admin_login
                 check_path: app_admin_login
+                enable_csrf: true
             logout:
                 path: app_admin_logout
+                # where to redirect after logout
+                # target: app_any_route
 
         main:
             lazy: true

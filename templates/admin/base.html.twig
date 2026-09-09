@@ -21,6 +21,7 @@
 
     <div class="container-fluid">
         <div class="row">
+            {% if app.user %}
             <nav class="col-md-2 sidebar py-3">
                 <ul class="nav flex-column">
                     <li class="nav-item"><a class="nav-link" href="#">Véhicules</a></li>
@@ -28,6 +29,9 @@
                 </ul>
             </nav>
             <main class="col-md-10 py-4">
+            {% else %}
+            <main class="col-12 py-4">
+            {% endif %}
                 {% for label, messages in app.flashes %}
                     {% for message in messages %}
                         <div class="alert alert-{{ label }}">{{ message }}</div>
