@@ -29,6 +29,7 @@ security:
                 login_path: app_admin_login
                 check_path: app_admin_login
                 enable_csrf: true
+                default_target_path: app_admin_dashboard
             logout:
                 path: app_admin_logout
                 # where to redirect after logout
