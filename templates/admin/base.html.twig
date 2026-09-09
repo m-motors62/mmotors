@@ -16,6 +16,12 @@
     <nav class="navbar navbar-dark">
         <div class="container-fluid">
             <span class="navbar-brand fw-bold">M-Motors — Back-office</span>
+            {% if app.user %}
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">{{ app.user.contact.prenom }} {{ app.user.contact.nom }}</span>
+                <a href="{{ path('app_admin_logout') }}" class="btn btn-outline-light btn-sm">Déconnexion</a>
+            </div>
+            {% endif %}
         </div>
     </nav>
 
