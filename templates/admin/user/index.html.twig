@@ -1,0 +1,67 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Gestion des utilisateurs{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Utilisateurs</h1>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#userModal">
+        Nouvel utilisateur
+    </button>
+</div>
+
+<div id="user-table-container">
+    {% include 'admin/user/_table.html.twig' %}
+</div>
+
+<div class="modal fade" id="userModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvel utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="form-errors" class="alert alert-danger d-none"></div>
+                <div id="user-form-container">
+                    <!-- Le formulaire sera charge ici via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    $('[data-bs-target="#userModal"]').on('click', function() {
+        $.get('{{ path('app_admin_user_new') }}', function(html) {
+            $('#user-form-container').html(html);
+        });
+    });
+
+    $(document).on('submit', '#user-form', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+
+        $.ajax({
+            url: '{{ path('app_admin_user_new') }}',
+            method: 'POST',
+            data: $form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#user-table-container').html(response.html);
+                    $('#userModal').modal('hide');
+                    $('#user-form-container').html('');
+                }
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                $('#user-form-container').html(response.html);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
