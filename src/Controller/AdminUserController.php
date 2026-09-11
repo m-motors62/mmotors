@@ -4,18 +4,19 @@ namespace App\Controller;
 
 use App\Entity\Contact;
 use App\Entity\User;
+use App\Form\UserEditType;
 use App\Form\UserType;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
-use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/admin/utilisateurs')]
 #[IsGranted('ROLE_GESTIONNAIRE')]
@@ -45,6 +46,15 @@ class AdminUserController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $newRole = $form->get('role')->getData();
+
+            /** @var User $currentUser */
+            $currentUser = $this->getUser();
+            $currentUserIsAdmin = in_array('ROLE_ADMIN', $currentUser->getRoles(), true);
+            if ('ROLE_ADMIN' === $newRole && !$currentUserIsAdmin) {
+                throw $this->createAccessDeniedException('Seul un administrateur peut attribuer ce role.');
+            }
+            
             $contact = new Contact();
             $contact->setNom($form->get('nom')->getData());
             $contact->setPrenom($form->get('prenom')->getData());
@@ -111,6 +121,71 @@ class AdminUserController extends AbstractController
 
         return $this->render('admin/user/new.html.twig', [
             'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}/modifier', name: 'app_admin_user_edit', requirements: ['id' => '\d+'])]
+    public function edit(User $user, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        /** @var User $currentUser */
+        $currentUser = $this->getUser();
+
+        if (!$user->canBeManagedBy($currentUser)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas modifier cet utilisateur.');
+        }
+
+        $form = $this->createForm(UserEditType::class, $user);
+        $form->handleRequest($request);
+
+        if ($request->isXmlHttpRequest() && !$form->isSubmitted()) {
+            return $this->render('admin/user/_edit_form.html.twig', [
+                'form' => $form,
+                'user' => $user,
+            ]);
+        }
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $newRole = $form->get('role')->getData();
+
+            $currentUserIsAdmin = in_array('ROLE_ADMIN', $currentUser->getRoles(), true);
+            if ('ROLE_ADMIN' === $newRole && !$currentUserIsAdmin) {
+                throw $this->createAccessDeniedException('Seul un administrateur peut attribuer ce role.');
+            }
+
+            $user->getContact()->setNom($form->get('nom')->getData());
+            $user->getContact()->setPrenom($form->get('prenom')->getData());
+            $user->getContact()->setEmail($form->get('email')->getData());
+            $user->setEmail($form->get('email')->getData());
+            $user->setRoles([$newRole]);
+
+            $entityManager->flush();
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => true,
+                    'html' => $this->renderView('admin/user/_table.html.twig', [
+                        'users' => $entityManager->getRepository(User::class)->findAll(),
+                    ]),
+                ]);
+            }
+
+            $this->addFlash('success', 'Utilisateur modifie avec succes.');
+            return $this->redirectToRoute('app_admin_user_index');
+        }
+
+        if ($request->isXmlHttpRequest()) {
+            return $this->json([
+                'success' => false,
+                'html' => $this->renderView('admin/user/_edit_form.html.twig', [
+                    'form' => $form,
+                    'user' => $user,
+                ]),
+            ], 422);
+        }
+
+        return $this->render('admin/user/edit.html.twig', [
+            'form' => $form,
+            'user' => $user,
         ]);
     }
 }

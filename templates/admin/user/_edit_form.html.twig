@@ -1,0 +1,7 @@
+{{ form_start(form, {'attr': {'id': 'user-edit-form', 'data-user-id': user.id}}) }}
+    {{ form_row(form.nom) }}
+    {{ form_row(form.prenom) }}
+    {{ form_row(form.email) }}
+    {{ form_row(form.role) }}
+    <button type="submit" class="btn btn-primary mt-3">Enregistrer</button>
+{{ form_end(form) }}

@@ -3,16 +3,17 @@
 namespace App\Form;
 
 use App\Entity\User;
-use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\OptionsResolver\Options;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
-class UserType extends AbstractType
+class UserEditType extends AbstractType
 {
     public function __construct(private Security $security)
     {
@@ -36,10 +37,12 @@ class UserType extends AbstractType
         $builder
             ->add('nom', TextType::class, [
                 'mapped' => false,
+                'data' => $options['data']->getContact()->getNom(),
                 'constraints' => [new NotBlank()],
             ])
             ->add('prenom', TextType::class, [
                 'mapped' => false,
+                'data' => $options['data']->getContact()->getPrenom(),
                 'constraints' => [new NotBlank()],
             ])
             ->add('email', EmailType::class, [
@@ -47,6 +50,7 @@ class UserType extends AbstractType
             ])
             ->add('role', ChoiceType::class, [
                 'mapped' => false,
+                'data' => $options['data']->getRoles()[0] ?? 'ROLE_COMMERCIAL',
                 'choices' => $roleChoices,
                 'constraints' => [new NotBlank()],
             ])

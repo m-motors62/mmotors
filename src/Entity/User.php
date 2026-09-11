@@ -198,4 +198,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+
+    public function canBeManagedBy(User $actor): bool
+    {
+        // On ne peut jamais agir sur soi-meme
+        if ($this->getId() === $actor->getId()) {
+            return false;
+        }
+
+        // Un admin peut tout gerer, sauf lui-meme (deja exclu ci-dessus)
+        if (in_array('ROLE_ADMIN', $actor->getRoles(), true)) {
+            return true;
+        }
+
+        // Un gestionnaire ne peut pas gerer un compte admin
+        if (in_array('ROLE_GESTIONNAIRE', $actor->getRoles(), true)) {
+            return !in_array('ROLE_ADMIN', $this->getRoles(), true);
+        }
+
+        return false;
+    }
 }

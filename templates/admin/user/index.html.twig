@@ -30,17 +30,35 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Modifier l'utilisateur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="user-edit-form-container">
+                    <!-- Le formulaire sera charge ici via AJAX -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
 <script>
 $(document).ready(function() {
+    // Ouverture modale creation (deja existant)
     $('[data-bs-target="#userModal"]').on('click', function() {
         $.get('{{ path('app_admin_user_new') }}', function(html) {
             $('#user-form-container').html(html);
         });
     });
 
+    // Soumission formulaire creation (deja existant)
     $(document).on('submit', '#user-form', function(e) {
         e.preventDefault();
         var $form = $(this);
@@ -54,11 +72,51 @@ $(document).ready(function() {
                     $('#user-table-container').html(response.html);
                     $('#userModal').modal('hide');
                     $('#user-form-container').html('');
+
+                    if (!response.emailSent) {
+                        alert('Utilisateur cree, mais l\'envoi de l\'email a echoue. Verifiez la configuration SMTP.');
+                    }
                 }
             },
             error: function(xhr) {
                 var response = xhr.responseJSON;
                 $('#user-form-container').html(response.html);
+            }
+        });
+    });
+
+    // Ouverture modale edition
+    $(document).on('click', '.btn-edit-user', function() {
+        var userId = $(this).data('user-id');
+        var editUrl = '{{ path('app_admin_user_index') }}/' + userId + '/modifier';
+
+        $.get(editUrl, function(html) {
+            $('#user-edit-form-container').html(html);
+            $('#editUserModal').modal('show');
+        });
+    });
+
+    // Soumission formulaire edition
+    $(document).on('submit', '#user-edit-form', function(e) {
+        e.preventDefault();
+        var $form = $(this);
+        var userId = $form.data('user-id');
+        var editUrl = '{{ path('app_admin_user_index') }}/' + userId + '/modifier';
+
+        $.ajax({
+            url: editUrl,
+            method: 'POST',
+            data: $form.serialize(),
+            success: function(response) {
+                if (response.success) {
+                    $('#user-table-container').html(response.html);
+                    $('#editUserModal').modal('hide');
+                    $('#user-edit-form-container').html('');
+                }
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                $('#user-edit-form-container').html(response.html);
             }
         });
     });
