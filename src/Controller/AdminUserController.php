@@ -54,7 +54,7 @@ class AdminUserController extends AbstractController
             if ('ROLE_ADMIN' === $newRole && !$currentUserIsAdmin) {
                 throw $this->createAccessDeniedException('Seul un administrateur peut attribuer ce role.');
             }
-            
+
             $contact = new Contact();
             $contact->setNom($form->get('nom')->getData());
             $contact->setPrenom($form->get('prenom')->getData());
@@ -187,5 +187,40 @@ class AdminUserController extends AbstractController
             'form' => $form,
             'user' => $user,
         ]);
+    }
+
+    #[Route('/{id}/renvoyer-lien', name: 'app_admin_user_resend_link', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function resendResetLink(User $user, EntityManagerInterface $entityManager, MailerInterface $mailer): Response
+    {
+        /** @var User $currentUser */
+        $currentUser = $this->getUser();
+
+        if (!$user->canBeManagedBy($currentUser)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas gerer cet utilisateur.');
+        }
+
+        $token = bin2hex(random_bytes(32));
+        $user->setResetToken($token);
+        $user->setResetTokenExpiresAt(new \DateTimeImmutable('+48 hours'));
+
+        $entityManager->flush();
+
+        $resetUrl = $this->generateUrl('app_admin_password_reset', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+
+        $email = (new Email())
+            ->from('m-motors@freemaxi.fr')
+            ->to($user->getContact()->getEmail())
+            ->subject('M-Motors - Nouveau lien de definition de mot de passe')
+            ->text("Bonjour {$user->getContact()->getPrenom()},\n\nUn nouveau lien vous permet de definir votre mot de passe (valable 48h) :\n{$resetUrl}\n\nCordialement,\nL'equipe M-Motors");
+
+        $emailSent = true;
+
+        try {
+            $mailer->send($email);
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+            $emailSent = false;
+        }
+
+        return $this->json(['success' => true, 'emailSent' => $emailSent]);
     }
 }

@@ -120,6 +120,27 @@ $(document).ready(function() {
             }
         });
     });
+
+    $(document).on('click', '.btn-resend-link', function() {
+        var userId = $(this).data('user-id');
+        var url = '{{ path('app_admin_user_index') }}/' + userId + '/renvoyer-lien';
+
+        if (!confirm('Envoyer un nouveau lien de definition de mot de passe a cet utilisateur ?')) {
+            return;
+        }
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.emailSent) {
+                    alert('Lien envoye avec succes.');
+                } else {
+                    alert('Utilisateur mis a jour, mais l\'envoi de l\'email a echoue.');
+                }
+            }
+        });
+    });
 });
 </script>
 {% endblock %}

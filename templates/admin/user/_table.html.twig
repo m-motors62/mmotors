@@ -36,6 +36,7 @@
             <td>
                 {% if user.canBeManagedBy(app.user) %}
                     <button type="button" class="btn btn-sm btn-outline-primary btn-edit-user" data-user-id="{{ user.id }}">Modifier</button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary btn-resend-link" data-user-id="{{ user.id }}">Renvoyer le lien</button>
                 {% else %}
                     <span class="text-muted small">—</span>
                 {% endif %}
