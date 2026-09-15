@@ -223,4 +223,34 @@ class AdminUserController extends AbstractController
 
         return $this->json(['success' => true, 'emailSent' => $emailSent]);
     }
+
+    #[Route('/{id}/toggle-actif', name: 'app_admin_user_toggle_active', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function toggleActive(User $user, EntityManagerInterface $entityManager): Response
+    {
+        /** @var User $currentUser */
+        $currentUser = $this->getUser();
+
+        if (!$user->canBeManagedBy($currentUser)) {
+            throw $this->createAccessDeniedException('Vous ne pouvez pas gerer cet utilisateur.');
+        }
+
+        if ($user->isActive()) {
+            $user->setIsActive(false);
+            $user->setDeactivatedAt(new \DateTimeImmutable());
+            $user->setDeactivatedBy($currentUser);
+        } else {
+            $user->setIsActive(true);
+            $user->setDeactivatedAt(null);
+            $user->setDeactivatedBy(null);
+        }
+
+        $entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'html' => $this->renderView('admin/user/_table.html.twig', [
+                'users' => $entityManager->getRepository(User::class)->findAll(),
+            ]),
+        ]);
+    }
 }

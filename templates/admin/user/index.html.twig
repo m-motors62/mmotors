@@ -141,6 +141,26 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Activation / desactivation d'un compte
+    $(document).on('click', '.btn-toggle-active', function() {
+        var userId = $(this).data('user-id');
+        var url = '{{ path('app_admin_user_index') }}/' + userId + '/toggle-actif';
+
+        if (!confirm('Confirmer le changement de statut de ce compte ?')) {
+            return;
+        }
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    $('#user-table-container').html(response.html);
+                }
+            }
+        });
+    });
 });
 </script>
 {% endblock %}

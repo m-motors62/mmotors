@@ -27,10 +27,18 @@
                 {% endfor %}
             </td>
             <td>
-                {% if user.isActive %}
-                    <span class="badge bg-success">Actif</span>
+                {% if user.canBeManagedBy(app.user) %}
+                    {% if user.isActive %}
+                        <span class="badge bg-success btn-toggle-active" data-user-id="{{ user.id }}" style="cursor: pointer;">Actif</span>
+                    {% else %}
+                        <span class="badge bg-secondary btn-toggle-active" data-user-id="{{ user.id }}" style="cursor: pointer;">Désactivé</span>
+                    {% endif %}
                 {% else %}
-                    <span class="badge bg-secondary">Désactivé</span>
+                    {% if user.isActive %}
+                        <span class="badge bg-success">Actif</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Désactivé</span>
+                    {% endif %}
                 {% endif %}
             </td>
             <td>
