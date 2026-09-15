@@ -19,3 +19,7 @@
 /assets/vendor/
 ###< symfony/asset-mapper ###
 .DS_Store
+
+# Fichiers uploades (donnees, pas du code)
+/public/uploads/vehicules/*
+!/public/uploads/vehicules/.gitkeep

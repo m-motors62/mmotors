@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\VehiculeRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -49,6 +51,17 @@ class Vehicule
 
     #[ORM\Column(length: 15, unique: true)]
     private ?string $immatriculation = null;
+
+    /**
+     * @var Collection<int, VehiculePhoto>
+     */
+    #[ORM\OneToMany(targetEntity: VehiculePhoto::class, mappedBy: 'vehicule', orphanRemoval: true)]
+    private Collection $vehiculePhotos;
+
+    public function __construct()
+    {
+        $this->vehiculePhotos = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -195,6 +208,36 @@ class Vehicule
     public function setImmatriculation(string $immatriculation): static
     {
         $this->immatriculation = $immatriculation;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, VehiculePhoto>
+     */
+    public function getVehiculePhotos(): Collection
+    {
+        return $this->vehiculePhotos;
+    }
+
+    public function addVehiculePhoto(VehiculePhoto $vehiculePhoto): static
+    {
+        if (!$this->vehiculePhotos->contains($vehiculePhoto)) {
+            $this->vehiculePhotos->add($vehiculePhoto);
+            $vehiculePhoto->setVehicule($this);
+        }
+
+        return $this;
+    }
+
+    public function removeVehiculePhoto(VehiculePhoto $vehiculePhoto): static
+    {
+        if ($this->vehiculePhotos->removeElement($vehiculePhoto)) {
+            // set the owning side to null (unless already changed)
+            if ($vehiculePhoto->getVehicule() === $this) {
+                $vehiculePhoto->setVehicule(null);
+            }
+        }
 
         return $this;
     }
