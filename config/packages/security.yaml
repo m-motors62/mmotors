@@ -50,6 +50,7 @@ security:
         - { path: ^/admin/reinitialiser, roles: PUBLIC_ACCESS }
         - { path: ^/admin/logout, roles: PUBLIC_ACCESS }
         - { path: ^/admin/dashboard, roles: [ROLE_COMMERCIAL, ROLE_GESTIONNAIRE] }
+        - { path: ^/admin/journal, roles: [ROLE_COMMERCIAL, ROLE_GESTIONNAIRE] }
         - { path: ^/admin/utilisateurs, roles: ROLE_GESTIONNAIRE }
         - { path: ^/admin, roles: ROLE_COMMERCIAL }
         - { path: ^/espace-client, roles: ROLE_CLIENT }
