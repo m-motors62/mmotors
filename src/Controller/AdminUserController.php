@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Form\UserEditType;
 use App\Form\UserType;
 use App\Repository\UserRepository;
+use App\Service\ActionLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,7 +34,7 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/nouveau', name: 'app_admin_user_new')]
-    public function new(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, MailerInterface $mailer): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, UserPasswordHasherInterface $passwordHasher, MailerInterface $mailer, ActionLogger $actionLogger): Response
     {
         $user = new User();
         $form = $this->createForm(UserType::class, $user);
@@ -72,6 +73,13 @@ class AdminUserController extends AbstractController
             $entityManager->persist($contact);
             $entityManager->persist($user);
             $entityManager->flush();
+
+            $actionLogger->log(
+                'creation_utilisateur',
+                sprintf('A cree le compte de %s %s (%s)', $contact->getPrenom(), $contact->getNom(), $contact->getEmail()),
+                'User',
+                $user->getId()
+            );
 
             $resetUrl = $this->generateUrl('app_admin_password_reset', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
@@ -125,7 +133,7 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/{id}/modifier', name: 'app_admin_user_edit', requirements: ['id' => '\d+'])]
-    public function edit(User $user, Request $request, EntityManagerInterface $entityManager): Response
+    public function edit(User $user, Request $request, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
     {
         /** @var User $currentUser */
         $currentUser = $this->getUser();
@@ -160,6 +168,13 @@ class AdminUserController extends AbstractController
 
             $entityManager->flush();
 
+            $actionLogger->log(
+                'modification_utilisateur',
+                sprintf('A modifie le compte de %s %s', $user->getContact()->getPrenom(), $user->getContact()->getNom()),
+                'User',
+                $user->getId()
+            );
+
             if ($request->isXmlHttpRequest()) {
                 return $this->json([
                     'success' => true,
@@ -190,7 +205,7 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/{id}/renvoyer-lien', name: 'app_admin_user_resend_link', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function resendResetLink(User $user, EntityManagerInterface $entityManager, MailerInterface $mailer): Response
+    public function resendResetLink(User $user, EntityManagerInterface $entityManager, MailerInterface $mailer, ActionLogger $actionLogger): Response
     {
         /** @var User $currentUser */
         $currentUser = $this->getUser();
@@ -204,6 +219,13 @@ class AdminUserController extends AbstractController
         $user->setResetTokenExpiresAt(new \DateTimeImmutable('+48 hours'));
 
         $entityManager->flush();
+
+        $actionLogger->log(
+            'renvoi_lien',
+            sprintf('A renvoye un lien de definition de mot de passe a %s %s', $user->getContact()->getPrenom(), $user->getContact()->getNom()),
+            'User',
+            $user->getId()
+        );
 
         $resetUrl = $this->generateUrl('app_admin_password_reset', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
 
@@ -225,7 +247,7 @@ class AdminUserController extends AbstractController
     }
 
     #[Route('/{id}/toggle-actif', name: 'app_admin_user_toggle_active', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function toggleActive(User $user, EntityManagerInterface $entityManager): Response
+    public function toggleActive(User $user, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
     {
         /** @var User $currentUser */
         $currentUser = $this->getUser();
@@ -245,6 +267,13 @@ class AdminUserController extends AbstractController
         }
 
         $entityManager->flush();
+
+        $actionLogger->log(
+            $user->isActive() ? 'reactivation_utilisateur' : 'desactivation_utilisateur',
+            sprintf('%s le compte de %s %s', $user->isActive() ? 'A reactive' : 'A desactive', $user->getContact()->getPrenom(), $user->getContact()->getNom()),
+            'User',
+            $user->getId()
+        );
 
         return $this->json([
             'success' => true,
