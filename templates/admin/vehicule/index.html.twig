@@ -1,0 +1,43 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Véhicules{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Véhicules</h1>
+    <a href="{{ path('app_admin_vehicule_new_location') }}" class="btn btn-primary">Ajouter (location)</a>
+</div>
+
+<table class="table table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Marque / Modèle</th>
+            <th>Immatriculation</th>
+            <th>Statut</th>
+            <th>Prix</th>
+            <th>Photos</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for vehicule in vehicules %}
+        <tr>
+            <td>{{ vehicule.marque }} {{ vehicule.modele }}</td>
+            <td>{{ vehicule.immatriculation }}</td>
+            <td>
+                {% if vehicule.statut == 'location' %}
+                    <span class="badge bg-info">Location</span>
+                {% else %}
+                    <span class="badge bg-warning">Vente</span>
+                {% endif %}
+            </td>
+            <td>{{ vehicule.prix }} €</td>
+            <td>{{ vehicule.vehiculePhotos|length }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" class="text-center text-muted">Aucun véhicule enregistré.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

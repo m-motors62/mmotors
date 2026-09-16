@@ -7,8 +7,10 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: VehiculeRepository::class)]
+#[UniqueEntity(fields: ['immatriculation'], message: 'Cette immatriculation est deja utilisee par un autre vehicule.')]
 class Vehicule
 {
     #[ORM\Id]
@@ -55,7 +57,7 @@ class Vehicule
     /**
      * @var Collection<int, VehiculePhoto>
      */
-    #[ORM\OneToMany(targetEntity: VehiculePhoto::class, mappedBy: 'vehicule', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: VehiculePhoto::class, mappedBy: 'vehicule', orphanRemoval: true, cascade: ['persist'])]
     private Collection $vehiculePhotos;
 
     public function __construct()
