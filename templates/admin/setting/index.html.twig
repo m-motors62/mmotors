@@ -1,0 +1,16 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Paramétrage{% endblock %}
+
+{% block body %}
+<h1 class="h3 mb-4">Paramétrage global</h1>
+
+<div class="card" style="max-width: 500px;">
+    <div class="card-body">
+        {{ form_start(form) }}
+            {{ form_row(form.settingValue) }}
+            <button type="submit" class="btn btn-primary mt-3">Enregistrer</button>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}
