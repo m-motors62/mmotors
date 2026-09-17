@@ -27,10 +27,12 @@ class AdminVehiculeController extends AbstractController
         $includeArchived = $request->query->getBoolean('archives');
 
         $vehicules = $vehiculeRepository->findAllFiltered($includeArchived);
+        $vehiculeIdsWithActiveDossier = $vehiculeRepository->findVehiculeIdsWithActiveDossier();
 
         return $this->render('admin/vehicule/index.html.twig', [
             'vehicules' => $vehicules,
             'includeArchived' => $includeArchived,
+            'vehiculeIdsWithActiveDossier' => $vehiculeIdsWithActiveDossier,
         ]);
     }
 
@@ -161,6 +163,39 @@ class AdminVehiculeController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/basculer', name: 'app_admin_vehicule_toggle_statut', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function toggleStatut(Vehicule $vehicule, EntityManagerInterface $entityManager, ActionLogger $actionLogger, DossierRepository $dossierRepository): Response
+    {
+        $blockingStatuses = ['en_cours', 'valide'];
+
+        $activeDossierCount = $dossierRepository->count([
+            'vehicule' => $vehicule,
+            'statut' => $blockingStatuses,
+        ]);
+
+        if ($activeDossierCount > 0) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ce vehicule a un dossier en cours ou valide et ne peut pas etre bascule.',
+            ], 422);
+        }
+
+        $ancienStatut = $vehicule->getStatut();
+        $nouveauStatut = $ancienStatut === 'location' ? 'vente' : 'location';
+        $vehicule->setStatut($nouveauStatut);
+
+        $entityManager->flush();
+
+        $actionLogger->log(
+            'bascule_vehicule',
+            sprintf('A bascule le vehicule %s %s (%s) de %s vers %s', $vehicule->getMarque(), $vehicule->getModele(), $vehicule->getImmatriculation(), $ancienStatut, $nouveauStatut),
+            'Vehicule',
+            $vehicule->getId()
+        );
+
+        return $this->json(['success' => true, 'nouveauStatut' => $nouveauStatut]);
+    }
+
     #[Route('/photo/{id}/supprimer', name: 'app_admin_vehicule_photo_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function deletePhoto(VehiculePhoto $vehiculePhoto, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader): Response
     {
@@ -173,8 +208,22 @@ class AdminVehiculeController extends AbstractController
     }
 
     #[Route('/{id}/archiver', name: 'app_admin_vehicule_toggle_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function toggleArchive(Vehicule $vehicule, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
+    public function toggleArchive(Vehicule $vehicule, EntityManagerInterface $entityManager, ActionLogger $actionLogger, DossierRepository $dossierRepository): Response
     {
+        if (!$vehicule->isArchived()) {
+            $activeDossierCount = $dossierRepository->count([
+                'vehicule' => $vehicule,
+                'statut' => ['en_cours', 'valide'],
+            ]);
+
+            if ($activeDossierCount > 0) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Ce vehicule a un dossier en cours ou valide et ne peut pas etre archive.',
+                ], 422);
+            }
+        }
+
         $vehicule->setIsArchived(!$vehicule->isArchived());
         $entityManager->flush();
 

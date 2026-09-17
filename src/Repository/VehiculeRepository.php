@@ -32,4 +32,21 @@ class VehiculeRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * @return int[] IDs des vehicules ayant un dossier actif (en_cours ou valide)
+     */
+    public function findVehiculeIdsWithActiveDossier(): array
+    {
+        $result = $this->getEntityManager()->createQueryBuilder()
+            ->select('DISTINCT v.id')
+            ->from(Vehicule::class, 'v')
+            ->innerJoin('App\Entity\Dossier', 'd', 'WITH', 'd.vehicule = v')
+            ->andWhere('d.statut IN (:statuts)')
+            ->setParameter('statuts', ['en_cours', 'valide'])
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map('intval', array_column($result, 'id'));
+    }
 }

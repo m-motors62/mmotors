@@ -15,7 +15,7 @@
     </div>
 </div>
 
-<table class="table table-striped bg-white" id="vehicule-table">
+<table class="table table-striped bg-white">
     <thead>
         <tr>
             <th>Marque / Modèle</th>
@@ -23,13 +23,17 @@
             <th>Statut</th>
             <th>Prix</th>
             <th>Photos</th>
-            <th>Actions</th>
+            <th class="text-end">Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for vehicule in vehicules %}
         <tr class="{{ vehicule.isArchived ? 'opacity-50' }}">
-            <td>{{ vehicule.marque }} {{ vehicule.modele }}</td>
+            <td>
+                <a href="{{ path('app_admin_vehicule_edit', {'id': vehicule.id}) }}" class="text-decoration-none fw-semibold">
+                    {{ vehicule.marque }} {{ vehicule.modele }}
+                </a>
+            </td>
             <td>{{ vehicule.immatriculation }}</td>
             <td>
                 {% if vehicule.statut == 'location' %}
@@ -43,12 +47,44 @@
             </td>
             <td>{{ vehicule.prix }} €</td>
             <td>{{ vehicule.vehiculePhotos|length }}</td>
-            <td>
-                <a href="{{ path('app_admin_vehicule_edit', {'id': vehicule.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
-                <button type="button" class="btn btn-sm btn-outline-secondary btn-toggle-archive-vehicule" data-vehicule-id="{{ vehicule.id }}">
-                    {{ vehicule.isArchived ? 'Désarchiver' : 'Archiver' }}
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-vehicule" data-vehicule-id="{{ vehicule.id }}">Supprimer</button>
+            <td class="text-end">
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        Actions
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        {% if vehicule.id not in vehiculeIdsWithActiveDossier %}
+                            <li>
+                                <button type="button" class="dropdown-item btn-toggle-statut-vehicule" data-vehicule-id="{{ vehicule.id }}">
+                                    {{ vehicule.statut == 'location' ? 'Basculer en vente' : 'Basculer en location' }}
+                                </button>
+                            </li>
+                            {% if not vehicule.isArchived %}
+                            <li>
+                                <button type="button" class="dropdown-item btn-toggle-archive-vehicule" data-vehicule-id="{{ vehicule.id }}">
+                                    Archiver
+                                </button>
+                            </li>
+                            {% endif %}
+                        {% endif %}
+                        {% if vehicule.isArchived %}
+                        <li>
+                            <button type="button" class="dropdown-item btn-toggle-archive-vehicule" data-vehicule-id="{{ vehicule.id }}">
+                                Désarchiver
+                            </button>
+                        </li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <button type="button" class="dropdown-item text-danger btn-delete-vehicule" data-vehicule-id="{{ vehicule.id }}">
+                                Supprimer
+                            </button>
+                        </li>
+                        {% if vehicule.id in vehiculeIdsWithActiveDossier %}
+                        <li><span class="dropdown-item-text text-muted small">Dossier actif — actions limitées</span></li>
+                        {% endif %}
+                    </ul>
+                </div>
             </td>
         </tr>
         {% else %}
@@ -84,6 +120,9 @@ $(document).ready(function() {
                 if (response.success) {
                     window.location.reload();
                 }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON.message);
             }
         });
     });
@@ -95,6 +134,28 @@ $(document).ready(function() {
 
         var vehiculeId = $(this).data('vehicule-id');
         var url = '{{ path('app_admin_vehicule_index') }}/' + vehiculeId + '/supprimer';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON.message);
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-toggle-statut-vehicule', function() {
+        if (!confirm('Confirmer le changement de statut de ce vehicule ?')) {
+            return;
+        }
+
+        var vehiculeId = $(this).data('vehicule-id');
+        var url = '{{ path('app_admin_vehicule_index') }}/' + vehiculeId + '/basculer';
 
         $.ajax({
             url: url,
