@@ -93,6 +93,65 @@ class AdminVehiculeController extends AbstractController
         ]);
     }
 
+    #[Route('/nouveau-vente', name: 'app_admin_vehicule_new_vente')]
+    public function newVente(Request $request, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader, ActionLogger $actionLogger): Response
+    {
+        $vehicule = new Vehicule();
+        $form = $this->createForm(VehiculeType::class, $vehicule);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $vehicule->setStatut('vente');
+
+            $photos = $form->get('photos')->getData();
+            $position = 0;
+
+            $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            $maxFileSize = 5 * 1024 * 1024;
+
+            foreach ($photos as $photoFile) {
+                if (!in_array($photoFile->getMimeType(), $allowedMimeTypes, true)) {
+                    $this->addFlash('warning', sprintf('Le fichier "%s" a ete ignore (format non autorise, seuls JPEG/PNG/WEBP sont acceptes).', $photoFile->getClientOriginalName()));
+                    continue;
+                }
+
+                if ($photoFile->getSize() > $maxFileSize) {
+                    $this->addFlash('warning', sprintf('Le fichier "%s" a ete ignore (taille superieure a 5 Mo).', $photoFile->getClientOriginalName()));
+                    continue;
+                }
+
+                $filename = $photoUploader->upload($photoFile);
+
+                $vehiculePhoto = new VehiculePhoto();
+                $vehiculePhoto->setFilename($filename);
+                $vehiculePhoto->setPosition($position);
+                $vehicule->addVehiculePhoto($vehiculePhoto);
+
+                $entityManager->persist($vehiculePhoto);
+
+                $position++;
+            }
+
+            $entityManager->persist($vehicule);
+            $entityManager->flush();
+
+            $actionLogger->log(
+                'creation_vehicule',
+                sprintf('A ajoute le vehicule %s %s (%s) au catalogue vente', $vehicule->getMarque(), $vehicule->getModele(), $vehicule->getImmatriculation()),
+                'Vehicule',
+                $vehicule->getId()
+            );
+
+            $this->addFlash('success', 'Vehicule ajoute au catalogue de vente.');
+            return $this->redirectToRoute('app_admin_vehicule_index');
+        }
+
+        return $this->render('admin/vehicule/new.html.twig', [
+            'form' => $form,
+            'mode' => 'vente',
+        ]);
+    }
+
     #[Route('/{id}/archiver', name: 'app_admin_vehicule_toggle_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function toggleArchive(Vehicule $vehicule, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
     {
