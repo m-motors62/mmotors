@@ -5,6 +5,7 @@ namespace App\Form;
 use App\Entity\Vehicule;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\MoneyType;
@@ -30,8 +31,16 @@ class VehiculeType extends AbstractType
                 'label' => 'Modele',
                 'constraints' => [new NotBlank()],
             ])
-            ->add('motorisation', TextType::class, [
+            ->add('motorisation', ChoiceType::class, [
                 'label' => 'Motorisation',
+                'choices' => [
+                    'Essence' => 'Essence',
+                    'Diesel' => 'Diesel',
+                    'Hybride' => 'Hybride',
+                    'Electrique' => 'Electrique',
+                    'GPL' => 'GPL',
+                ],
+                'placeholder' => 'Choisir une motorisation',
                 'required' => false,
             ])
             ->add('kilometrage', IntegerType::class, [

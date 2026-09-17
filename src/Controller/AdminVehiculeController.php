@@ -7,6 +7,7 @@ use App\Entity\VehiculePhoto;
 use App\Form\VehiculeType;
 use App\Repository\VehiculeRepository;
 use App\Service\ActionLogger;
+use App\Service\VehicleApiClient;
 use App\Service\VehiculePhotoUploader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -86,5 +87,17 @@ class AdminVehiculeController extends AbstractController
             'form' => $form,
             'mode' => 'location',
         ]);
+    }
+
+    #[Route('/api/marques', name: 'app_admin_vehicule_api_marques')]
+    public function apiMarques(VehicleApiClient $vehicleApiClient): Response
+    {
+        return $this->json($vehicleApiClient->getMakes());
+    }
+
+    #[Route('/api/modeles/{marque}', name: 'app_admin_vehicule_api_modeles')]
+    public function apiModeles(string $marque, VehicleApiClient $vehicleApiClient): Response
+    {
+        return $this->json($vehicleApiClient->getModelsForMake($marque));
     }
 }

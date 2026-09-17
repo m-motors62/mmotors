@@ -30,8 +30,10 @@
             {% if app.user %}
             <nav class="col-md-2 sidebar py-3">
                 <ul class="nav flex-column">
+                    {% if is_granted('ROLE_COMMERCIAL') %}
                     <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_vehicule_index') }}">Véhicules</a></li>
                     <li class="nav-item"><a class="nav-link" href="#">Dossiers</a></li>
+                    {% endif %}
                     {% if is_granted('ROLE_GESTIONNAIRE') %}
                     <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_user_index') }}">Utilisateurs</a></li>
                     {% endif %}

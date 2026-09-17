@@ -8,8 +8,15 @@
 <div class="card" style="max-width: 700px;">
     <div class="card-body">
         {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+            {{ form_errors(form) }}
             <div class="row">
-                <div class="col-md-6">{{ form_row(form.marque) }}</div>
+                <div class="col-md-6">
+                    <label for="{{ form.marque.vars.id }}" class="form-label">Marque</label>
+                    <input type="text" id="{{ form.marque.vars.id }}" name="{{ form.marque.vars.full_name }}" class="form-control{{ not form.marque.vars.valid ? ' is-invalid' }}" list="marques-suggestions" autocomplete="off" value="{{ form.marque.vars.value }}" required>
+                    <datalist id="marques-suggestions"></datalist>
+                    {{ form_errors(form.marque) }}
+                    <small class="text-muted">Suggestions basees sur une base de donnees US — libre si votre marque n'y figure pas (ex: Dacia).</small>
+                </div>
                 <div class="col-md-6">{{ form_row(form.modele) }}</div>
             </div>
             <div class="row">
@@ -34,7 +41,21 @@
             {{ form_row(form.photos) }}
 
             <button type="submit" class="btn btn-primary mt-3">Ajouter le véhicule</button>
-        {{ form_end(form) }}
+        {{ form_row(form._token) }}
+        {{ form_end(form, {'render_rest': false}) }}
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    $.get('{{ path('app_admin_vehicule_api_marques') }}', function(makes) {
+        var $datalist = $('#marques-suggestions');
+        makes.forEach(function(make) {
+            $datalist.append('<option value="' + make + '">');
+        });
+    });
+});
+</script>
 {% endblock %}
