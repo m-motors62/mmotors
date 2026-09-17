@@ -1,0 +1,204 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Modifier {{ vehicule.marque }} {{ vehicule.modele }}{% endblock %}
+
+{% block body %}
+<h1 class="h3 mb-4">Modifier {{ vehicule.marque }} {{ vehicule.modele }}</h1>
+
+<div class="card" style="max-width: 700px;">
+    <div class="card-body">
+        {% if vehicule.vehiculePhotos|length > 0 %}
+        <div class="mb-4">
+            <label class="form-label">Photos actuelles</label>
+            <div id="existing-photos" class="d-flex flex-wrap gap-2">
+                {% for photo in vehicule.vehiculePhotos %}
+                <div class="position-relative" data-photo-id="{{ photo.id }}">
+                    <img src="/uploads/vehicules/{{ photo.filename }}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">
+                    <button type="button" class="btn-close position-absolute top-0 end-0 bg-white rounded-circle btn-delete-existing-photo" style="transform: translate(30%, -30%);" data-photo-id="{{ photo.id }}"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+            {{ form_errors(form) }}
+            <div class="row">
+                <div class="col-md-6">
+                    <label for="{{ form.marque.vars.id }}" class="form-label">Marque</label>
+                    <input type="text" id="{{ form.marque.vars.id }}" name="{{ form.marque.vars.full_name }}" class="form-control{{ not form.marque.vars.valid ? ' is-invalid' }}" list="marques-suggestions" autocomplete="off" value="{{ form.marque.vars.value }}" required>
+                    <datalist id="marques-suggestions"></datalist>
+                    {{ form_errors(form.marque) }}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.modele.vars.id }}" class="form-label">Modele</label>
+                    <input type="text" id="{{ form.modele.vars.id }}" name="{{ form.modele.vars.full_name }}" class="form-control{{ not form.modele.vars.valid ? ' is-invalid' }}" list="modeles-suggestions" autocomplete="off" value="{{ form.modele.vars.value }}" required>
+                    <datalist id="modeles-suggestions"></datalist>
+                    {{ form_errors(form.modele) }}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">{{ form_row(form.motorisation) }}</div>
+                <div class="col-md-6">{{ form_row(form.kilometrage) }}</div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">{{ form_row(form.prix) }}</div>
+                <div class="col-md-6">
+                    <label for="{{ form.immatriculation.vars.id }}" class="form-label">Immatriculation</label>
+                    <input type="text" id="{{ form.immatriculation.vars.id }}" name="{{ form.immatriculation.vars.full_name }}" class="form-control{{ not form.immatriculation.vars.valid ? ' is-invalid' }}" value="{{ form.immatriculation.vars.value }}" required>
+                    {{ form_errors(form.immatriculation) }}
+                </div>
+            </div>
+
+            {{ form_row(form.etat) }}
+
+            <fieldset class="border rounded p-3 mb-3">
+                <legend class="h6">Options incluses</legend>
+                {{ form_row(form.assurance) }}
+                {{ form_row(form.assistance) }}
+                {{ form_row(form.entretien) }}
+                {{ form_row(form.controleTechnique) }}
+            </fieldset>
+
+            <div class="mb-3">
+                <label class="form-label">Ajouter des photos</label>
+                <div id="dropzone" class="border border-2 border-dashed rounded p-4 text-center" style="cursor: pointer; background-color: #f8f9fa;">
+                    <p class="mb-1">Glissez vos photos ici, ou cliquez pour parcourir</p>
+                    <small class="text-muted">JPEG, PNG, WEBP — 5 Mo max par photo</small>
+                    <div id="preview-list" class="d-flex flex-wrap gap-2 mt-3"></div>
+                </div>
+                {{ form_widget(form.photos, {'attr': {'class': 'd-none'}}) }}
+                {{ form_errors(form.photos) }}
+            </div>
+
+            <button type="submit" class="btn btn-primary mt-3">Enregistrer</button>
+        {{ form_row(form._token) }}
+        {{ form_end(form, {'render_rest': false}) }}
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    $.get('{{ path('app_admin_vehicule_api_marques') }}', function(makes) {
+        var $datalist = $('#marques-suggestions');
+        makes.forEach(function(make) {
+            $datalist.append('<option value="' + make + '">');
+        });
+        loadModelesFor($('#{{ form.marque.vars.id }}').val());
+    });
+
+    function loadModelesFor(marque) {
+        if (!marque) return;
+        $.get('{{ path('app_admin_vehicule_api_modeles', {'marque': '__MARQUE__'}) }}'.replace('__MARQUE__', encodeURIComponent(marque)), function(modeles) {
+            var $datalist = $('#modeles-suggestions');
+            $datalist.empty();
+            modeles.forEach(function(modele) {
+                $datalist.append('<option value="' + modele + '">');
+            });
+        });
+    }
+
+    $('#{{ form.marque.vars.id }}').on('change input', function() {
+        loadModelesFor($(this).val());
+    });
+
+    $('#{{ form.immatriculation.vars.id }}').on('input', function() {
+        var value = $(this).val().toUpperCase().replace(/[^A-Z0-9]/g, '');
+        var formatted = '';
+        if (value.length > 0) formatted += value.substring(0, 2);
+        if (value.length > 2) formatted += '-' + value.substring(2, 5);
+        if (value.length > 5) formatted += '-' + value.substring(5, 7);
+        $(this).val(formatted);
+    });
+
+    $(document).on('click', '.btn-delete-existing-photo', function() {
+        if (!confirm('Supprimer cette photo ?')) return;
+
+        var photoId = $(this).data('photo-id');
+        var $wrapper = $(this).closest('[data-photo-id]');
+        var url = '{{ path('app_admin_vehicule_photo_delete', {'id': 0}) }}'.replace('/0/', '/' + photoId + '/');
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    $wrapper.remove();
+                }
+            }
+        });
+    });
+
+    var $dropzone = $('#dropzone');
+    var $fileInput = $('#{{ form.photos.vars.id }}');
+    var $previewList = $('#preview-list');
+    var selectedFiles = [];
+
+    function addFiles(newFiles) {
+        Array.from(newFiles).forEach(function(file) {
+            if (file.type.startsWith('image/')) {
+                selectedFiles.push(file);
+            }
+        });
+        syncFileInput();
+        updatePreview();
+    }
+
+    function syncFileInput() {
+        var dataTransfer = new DataTransfer();
+        selectedFiles.forEach(function(file) {
+            dataTransfer.items.add(file);
+        });
+        $fileInput[0].files = dataTransfer.files;
+    }
+
+    function updatePreview() {
+        $previewList.empty();
+        selectedFiles.forEach(function(file, index) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var $wrapper = $('<div class="position-relative">');
+                var $img = $('<img>').attr('src', e.target.result).css({width: '80px', height: '80px', 'object-fit': 'cover', 'border-radius': '4px'});
+                var $removeBtn = $('<button type="button" class="btn-close position-absolute top-0 end-0 bg-white rounded-circle" style="transform: translate(30%, -30%);">').data('index', index);
+                $wrapper.append($img).append($removeBtn);
+                $previewList.append($wrapper);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    $dropzone.on('click', function(e) {
+        if (e.target === this || $(e.target).closest('#preview-list').length === 0) {
+            $fileInput.trigger('click');
+        }
+    });
+
+    $dropzone.on('dragover', function(e) {
+        e.preventDefault();
+        $(this).css('background-color', '#e9ecef');
+    });
+
+    $dropzone.on('dragleave drop', function(e) {
+        e.preventDefault();
+        $(this).css('background-color', '#f8f9fa');
+    });
+
+    $dropzone.on('drop', function(e) {
+        addFiles(e.originalEvent.dataTransfer.files);
+    });
+
+    $fileInput.on('change', function() {
+        addFiles(this.files);
+    });
+
+    $previewList.on('click', '.btn-close', function() {
+        var index = $(this).data('index');
+        selectedFiles.splice(index, 1);
+        syncFileInput();
+        updatePreview();
+    });
+});
+</script>
+{% endblock %}

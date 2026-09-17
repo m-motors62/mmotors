@@ -96,6 +96,7 @@ class VehiculeType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => Vehicule::class,
+            'is_edit' => false,
         ]);
     }
 }

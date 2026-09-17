@@ -104,6 +104,74 @@ class AdminVehiculeController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/modifier', name: 'app_admin_vehicule_edit', requirements: ['id' => '\d+'])]
+    public function edit(Vehicule $vehicule, Request $request, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader, ActionLogger $actionLogger): Response
+    {
+        $form = $this->createForm(VehiculeType::class, $vehicule, [
+            'is_edit' => true,
+        ]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $photos = $form->get('photos')->getData();
+            $position = count($vehicule->getVehiculePhotos());
+
+            $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            $maxFileSize = 5 * 1024 * 1024;
+
+            foreach ($photos as $photoFile) {
+                if (!in_array($photoFile->getMimeType(), $allowedMimeTypes, true)) {
+                    $this->addFlash('warning', sprintf('Le fichier "%s" a ete ignore (format non autorise).', $photoFile->getClientOriginalName()));
+                    continue;
+                }
+
+                if ($photoFile->getSize() > $maxFileSize) {
+                    $this->addFlash('warning', sprintf('Le fichier "%s" a ete ignore (taille superieure a 5 Mo).', $photoFile->getClientOriginalName()));
+                    continue;
+                }
+
+                $filename = $photoUploader->upload($photoFile);
+
+                $vehiculePhoto = new VehiculePhoto();
+                $vehiculePhoto->setFilename($filename);
+                $vehiculePhoto->setPosition($position);
+                $vehicule->addVehiculePhoto($vehiculePhoto);
+
+                $entityManager->persist($vehiculePhoto);
+
+                $position++;
+            }
+
+            $entityManager->flush();
+
+            $actionLogger->log(
+                'modification_vehicule',
+                sprintf('A modifie le vehicule %s %s (%s)', $vehicule->getMarque(), $vehicule->getModele(), $vehicule->getImmatriculation()),
+                'Vehicule',
+                $vehicule->getId()
+            );
+
+            $this->addFlash('success', 'Vehicule modifie avec succes.');
+            return $this->redirectToRoute('app_admin_vehicule_index');
+        }
+
+        return $this->render('admin/vehicule/edit.html.twig', [
+            'form' => $form,
+            'vehicule' => $vehicule,
+        ]);
+    }
+
+    #[Route('/photo/{id}/supprimer', name: 'app_admin_vehicule_photo_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function deletePhoto(VehiculePhoto $vehiculePhoto, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader): Response
+    {
+        $vehicule = $vehiculePhoto->getVehicule();
+        $photoUploader->remove($vehiculePhoto->getFilename());
+        $vehicule->removeVehiculePhoto($vehiculePhoto);
+        $entityManager->flush();
+
+        return $this->json(['success' => true]);
+    }
+
     #[Route('/{id}/archiver', name: 'app_admin_vehicule_toggle_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function toggleArchive(Vehicule $vehicule, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
     {

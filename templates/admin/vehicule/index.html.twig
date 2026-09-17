@@ -44,6 +44,7 @@
             <td>{{ vehicule.prix }} €</td>
             <td>{{ vehicule.vehiculePhotos|length }}</td>
             <td>
+                <a href="{{ path('app_admin_vehicule_edit', {'id': vehicule.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
                 <button type="button" class="btn btn-sm btn-outline-secondary btn-toggle-archive-vehicule" data-vehicule-id="{{ vehicule.id }}">
                     {{ vehicule.isArchived ? 'Désarchiver' : 'Archiver' }}
                 </button>
