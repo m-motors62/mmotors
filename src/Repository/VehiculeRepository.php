@@ -16,28 +16,20 @@ class VehiculeRepository extends ServiceEntityRepository
         parent::__construct($registry, Vehicule::class);
     }
 
-    //    /**
-    //     * @return Vehicule[] Returns an array of Vehicule objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('v.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @return Vehicule[]
+     */
+    public function findAllFiltered(bool $includeArchived = false): array
+    {
+        $qb = $this->createQueryBuilder('v')
+            ->leftJoin('v.vehiculePhotos', 'photos')
+            ->addSelect('photos')
+            ->orderBy('v.id', 'DESC');
 
-    //    public function findOneBySomeField($value): ?Vehicule
-    //    {
-    //        return $this->createQueryBuilder('v')
-    //            ->andWhere('v.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if (!$includeArchived) {
+            $qb->andWhere('v.isArchived = false');
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

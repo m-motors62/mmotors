@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Vehicule;
 use App\Entity\VehiculePhoto;
 use App\Form\VehiculeType;
+use App\Repository\DossierRepository;
 use App\Repository\VehiculeRepository;
 use App\Service\ActionLogger;
 use App\Service\VehicleApiClient;
@@ -21,12 +22,15 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class AdminVehiculeController extends AbstractController
 {
     #[Route('', name: 'app_admin_vehicule_index')]
-    public function index(VehiculeRepository $vehiculeRepository): Response
+    public function index(Request $request, VehiculeRepository $vehiculeRepository): Response
     {
-        $vehicules = $vehiculeRepository->findAll();
+        $includeArchived = $request->query->getBoolean('archives');
+
+        $vehicules = $vehiculeRepository->findAllFiltered($includeArchived);
 
         return $this->render('admin/vehicule/index.html.twig', [
             'vehicules' => $vehicules,
+            'includeArchived' => $includeArchived,
         ]);
     }
 
@@ -87,6 +91,49 @@ class AdminVehiculeController extends AbstractController
             'form' => $form,
             'mode' => 'location',
         ]);
+    }
+
+    #[Route('/{id}/archiver', name: 'app_admin_vehicule_toggle_archive', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function toggleArchive(Vehicule $vehicule, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
+    {
+        $vehicule->setIsArchived(!$vehicule->isArchived());
+        $entityManager->flush();
+
+        $actionLogger->log(
+            $vehicule->isArchived() ? 'archivage_vehicule' : 'desarchivage_vehicule',
+            sprintf('%s le vehicule %s %s (%s)', $vehicule->isArchived() ? 'A archive' : 'A desarchive', $vehicule->getMarque(), $vehicule->getModele(), $vehicule->getImmatriculation()),
+            'Vehicule',
+            $vehicule->getId()
+        );
+
+        return $this->json(['success' => true]);
+    }
+
+    #[Route('/{id}/supprimer', name: 'app_admin_vehicule_delete', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function delete(Vehicule $vehicule, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader, ActionLogger $actionLogger, DossierRepository $dossierRepository): Response
+    {
+        $dossierCount = $dossierRepository->count(['vehicule' => $vehicule]);
+
+        if ($dossierCount > 0) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Ce vehicule est rattache a au moins un dossier et ne peut pas etre supprime. Vous pouvez l\'archiver a la place.',
+            ], 422);
+        }
+
+        $description = sprintf('A supprime le vehicule %s %s (%s)', $vehicule->getMarque(), $vehicule->getModele(), $vehicule->getImmatriculation());
+        $vehiculeId = $vehicule->getId();
+
+        foreach ($vehicule->getVehiculePhotos() as $photo) {
+            $photoUploader->remove($photo->getFilename());
+        }
+
+        $entityManager->remove($vehicule);
+        $entityManager->flush();
+
+        $actionLogger->log('suppression_vehicule', $description, 'Vehicule', $vehiculeId);
+
+        return $this->json(['success' => true]);
     }
 
     #[Route('/api/marques', name: 'app_admin_vehicule_api_marques')]

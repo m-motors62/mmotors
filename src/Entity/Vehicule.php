@@ -60,6 +60,9 @@ class Vehicule
     #[ORM\OneToMany(targetEntity: VehiculePhoto::class, mappedBy: 'vehicule', orphanRemoval: true, cascade: ['persist'])]
     private Collection $vehiculePhotos;
 
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $isArchived = false;
+
     public function __construct()
     {
         $this->vehiculePhotos = new ArrayCollection();
@@ -240,6 +243,18 @@ class Vehicule
                 $vehiculePhoto->setVehicule(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isArchived(): ?bool
+    {
+        return $this->isArchived;
+    }
+
+    public function setIsArchived(bool $isArchived): static
+    {
+        $this->isArchived = $isArchived;
 
         return $this;
     }

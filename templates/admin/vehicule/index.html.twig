@@ -5,10 +5,16 @@
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Véhicules</h1>
-    <a href="{{ path('app_admin_vehicule_new_location') }}" class="btn btn-primary">Ajouter (location)</a>
+    <div class="d-flex align-items-center gap-3">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="toggle-archives" {{ includeArchived ? 'checked' }}>
+            <label class="form-check-label" for="toggle-archives">Afficher les archivés</label>
+        </div>
+        <a href="{{ path('app_admin_vehicule_new_location') }}" class="btn btn-primary">Ajouter (location)</a>
+    </div>
 </div>
 
-<table class="table table-striped bg-white">
+<table class="table table-striped bg-white" id="vehicule-table">
     <thead>
         <tr>
             <th>Marque / Modèle</th>
@@ -16,11 +22,12 @@
             <th>Statut</th>
             <th>Prix</th>
             <th>Photos</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
         {% for vehicule in vehicules %}
-        <tr>
+        <tr class="{{ vehicule.isArchived ? 'opacity-50' }}">
             <td>{{ vehicule.marque }} {{ vehicule.modele }}</td>
             <td>{{ vehicule.immatriculation }}</td>
             <td>
@@ -29,15 +36,77 @@
                 {% else %}
                     <span class="badge bg-warning">Vente</span>
                 {% endif %}
+                {% if vehicule.isArchived %}
+                    <span class="badge bg-secondary">Archivé</span>
+                {% endif %}
             </td>
             <td>{{ vehicule.prix }} €</td>
             <td>{{ vehicule.vehiculePhotos|length }}</td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-secondary btn-toggle-archive-vehicule" data-vehicule-id="{{ vehicule.id }}">
+                    {{ vehicule.isArchived ? 'Désarchiver' : 'Archiver' }}
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-vehicule" data-vehicule-id="{{ vehicule.id }}">Supprimer</button>
+            </td>
         </tr>
         {% else %}
         <tr>
-            <td colspan="5" class="text-center text-muted">Aucun véhicule enregistré.</td>
+            <td colspan="6" class="text-center text-muted">Aucun véhicule enregistré.</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    $('#toggle-archives').on('change', function() {
+        var url = new URL(window.location.href);
+        if ($(this).is(':checked')) {
+            url.searchParams.set('archives', '1');
+        } else {
+            url.searchParams.delete('archives');
+        }
+        window.location.href = url.toString();
+    });
+
+    $(document).on('click', '.btn-toggle-archive-vehicule', function() {
+        var vehiculeId = $(this).data('vehicule-id');
+        var url = '{{ path('app_admin_vehicule_index') }}/' + vehiculeId + '/archiver';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-delete-vehicule', function() {
+        if (!confirm('Supprimer definitivement ce vehicule ? Cette action est irreversible.')) {
+            return;
+        }
+
+        var vehiculeId = $(this).data('vehicule-id');
+        var url = '{{ path('app_admin_vehicule_index') }}/' + vehiculeId + '/supprimer';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON.message);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}
