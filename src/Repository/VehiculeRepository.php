@@ -24,7 +24,7 @@ class VehiculeRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('v')
             ->leftJoin('v.vehiculePhotos', 'photos')
             ->addSelect('photos')
-            ->orderBy('v.id', 'DESC');
+            ->orderBy('v.dateCreation', 'DESC');
 
         if (!$includeArchived) {
             $qb->andWhere('v.isArchived = false');

@@ -1,7 +1,9 @@
 {% extends 'admin/base.html.twig' %}
 
 {% block title %}Véhicules{% endblock %}
-
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/css/dataTables.bootstrap5.min.css">
+{% endblock %}
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Véhicules</h1>
@@ -15,7 +17,7 @@
     </div>
 </div>
 
-<table class="table table-striped bg-white">
+<table class="table table-striped bg-white" id="vehicule-table">
     <thead>
         <tr>
             <th>Marque / Modèle</th>
@@ -23,6 +25,7 @@
             <th>Statut</th>
             <th>Prix</th>
             <th>Photos</th>
+            <th>Ajouté le</th>
             <th class="text-end">Actions</th>
         </tr>
     </thead>
@@ -47,6 +50,7 @@
             </td>
             <td>{{ vehicule.prix }} €</td>
             <td>{{ vehicule.vehiculePhotos|length }}</td>
+            <td>{{ vehicule.dateCreation|date('d/m/Y H:i') }}</td>
             <td class="text-end">
                 <div class="dropdown">
                     <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
@@ -89,7 +93,7 @@
         </tr>
         {% else %}
         <tr>
-            <td colspan="6" class="text-center text-muted">Aucun véhicule enregistré.</td>
+            <td colspan="7" class="text-center text-muted">Aucun véhicule enregistré.</td>
         </tr>
         {% endfor %}
     </tbody>
@@ -97,8 +101,28 @@
 {% endblock %}
 
 {% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.11/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/js/dataTables.bootstrap5.min.js"></script>
 <script>
 $(document).ready(function() {
+    $('#vehicule-table').DataTable({
+        order: [[5, 'desc']],
+        language: {
+            search: "Rechercher :",
+            lengthMenu: "Afficher _MENU_ véhicules",
+            info: "_START_ à _END_ sur _TOTAL_ véhicules",
+            infoEmpty: "Aucun véhicule",
+            paginate: {
+                previous: "Précédent",
+                next: "Suivant"
+            },
+            zeroRecords: "Aucun véhicule ne correspond à la recherche"
+        },
+        columnDefs: [
+            { orderable: false, targets: -1 }
+        ]
+    });
+
     $('#toggle-archives').on('change', function() {
         var url = new URL(window.location.href);
         if ($(this).is(':checked')) {

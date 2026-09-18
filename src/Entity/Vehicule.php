@@ -63,9 +63,13 @@ class Vehicule
     #[ORM\Column(options: ['default' => false])]
     private ?bool $isArchived = false;
 
+    #[ORM\Column]
+    private ?\DateTimeImmutable $dateCreation = null;
+
     public function __construct()
     {
         $this->vehiculePhotos = new ArrayCollection();
+        $this->dateCreation = new \DateTimeImmutable();
     }
 
     public function getId(): ?int
@@ -255,6 +259,18 @@ class Vehicule
     public function setIsArchived(bool $isArchived): static
     {
         $this->isArchived = $isArchived;
+
+        return $this;
+    }
+
+    public function getDateCreation(): ?\DateTimeImmutable
+    {
+        return $this->dateCreation;
+    }
+
+    public function setDateCreation(\DateTimeImmutable $dateCreation): static
+    {
+        $this->dateCreation = $dateCreation;
 
         return $this;
     }
