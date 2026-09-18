@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Vehicule;
 use App\Entity\VehiculePhoto;
 use App\Form\VehiculeType;
+use App\Repository\ActionLogRepository;
 use App\Repository\DossierRepository;
 use App\Repository\VehiculeRepository;
 use App\Service\ActionLogger;
@@ -107,7 +108,7 @@ class AdminVehiculeController extends AbstractController
     }
 
     #[Route('/{id}/modifier', name: 'app_admin_vehicule_edit', requirements: ['id' => '\d+'])]
-    public function edit(Vehicule $vehicule, Request $request, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader, ActionLogger $actionLogger): Response
+    public function edit(Vehicule $vehicule, Request $request, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader, ActionLogger $actionLogger, ActionLogRepository $actionLogRepository): Response
     {
         $form = $this->createForm(VehiculeType::class, $vehicule, [
             'is_edit' => true,
@@ -160,6 +161,10 @@ class AdminVehiculeController extends AbstractController
         return $this->render('admin/vehicule/edit.html.twig', [
             'form' => $form,
             'vehicule' => $vehicule,
+            'historique' => $actionLogRepository->findBy(
+                ['targetType' => 'Vehicule', 'targetId' => $vehicule->getId()],
+                ['createdAt' => 'DESC']
+            ),
         ]);
     }
 
