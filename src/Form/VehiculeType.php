@@ -43,6 +43,23 @@ class VehiculeType extends AbstractType
                 'placeholder' => 'Choisir une motorisation',
                 'required' => false,
             ])
+            ->add('couleur', ChoiceType::class, [
+                'label' => 'Couleur',
+                'choices' => [
+                    'Blanc' => 'Blanc',
+                    'Noir' => 'Noir',
+                    'Gris' => 'Gris',
+                    'Bleu' => 'Bleu',
+                    'Rouge' => 'Rouge',
+                    'Vert' => 'Vert',
+                    'Jaune' => 'Jaune',
+                    'Orange' => 'Orange',
+                    'Marron' => 'Marron',
+                    'Beige' => 'Beige',
+                ],
+                'placeholder' => 'Choisir une couleur',
+                'required' => false,
+            ])
             ->add('kilometrage', IntegerType::class, [
                 'label' => 'Kilometrage',
                 'constraints' => [new NotBlank(), new Positive()],

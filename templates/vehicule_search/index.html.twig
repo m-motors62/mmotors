@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Véhicules{% endblock %}
+
+{% block body %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="card">
+            <div class="card-body">
+                <h2 class="h6">Filtres</h2>
+                <form method="get" id="filter-form" action="{{ path('app_vehicule_search') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Mode</label>
+                        <select name="mode" class="form-select">
+                            <option value="" {{ mode is null ? 'selected' }}>Tous</option>
+                            {% for m in modesDisponibles %}
+                            <option value="{{ m }}" {{ mode == m ? 'selected' }}>{{ m == 'location' ? 'Location' : 'Vente' }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Marque</label>
+                        <select name="marque" id="filter-marque" class="form-select">
+                            <option value="">Toutes</option>
+                            {% for m in marquesDisponibles %}
+                            <option value="{{ m }}" {{ marque and marque|lower == m|lower ? 'selected' }}>{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Modèle</label>
+                        <select name="modele" id="filter-modele" class="form-select">
+                            <option value="">Tous</option>
+                            {% for m in modelesDisponibles %}
+                            <option value="{{ m }}" {{ modele and modele|lower == m|lower ? 'selected' }}>{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motorisation</label>
+                        <select name="motorisation" class="form-select">
+                            <option value="">Toutes</option>
+                            {% for m in motorisationsDisponibles %}
+                            <option value="{{ m }}" {{ filtres.motorisation == m ? 'selected' }}>{{ m }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prix maximum</label>
+                        <input type="number" name="prix_max" id="filter-prix" class="form-control" value="{{ filtres.prix_max }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Kilométrage maximum</label>
+                        <input type="number" name="kilometrage_max" id="filter-km" class="form-control" value="{{ filtres.kilometrage_max }}">
+                    </div>
+                    <noscript><button type="submit" class="btn btn-primary w-100">Filtrer</button></noscript>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <h1 class="h4 mb-4">
+            {{ vehicules|length }} véhicule{{ vehicules|length > 1 ? 's' }} trouvé{{ vehicules|length > 1 ? 's' }}
+            {% if marque %} — {{ marque }}{% endif %}
+            {% if modele %} {{ modele }}{% endif %}
+        </h1>
+
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for vehicule in vehicules %}
+           <div class="col">
+                <a href="{{ path('app_vehicule_show', {'slug': vehicule.slug}) }}" class="text-decoration-none text-dark">
+                    <div class="card h-100">
+                        <div class="position-relative overflow-hidden" style="height: 200px;">
+                            {% if vehicule.vehiculePhotos|length > 0 %}
+                                <img src="/uploads/vehicules/{{ vehicule.vehiculePhotos|first.filename }}" class="w-100 h-100" style="object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light d-flex align-items-center justify-content-center h-100">
+                                    <span class="text-muted">Pas de photo</span>
+                                </div>
+                            {% endif %}
+                            <div class="ribbon ribbon-{{ vehicule.statut }}">
+                                {{ vehicule.statut == 'location' ? 'Location' : 'Vente' }}
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <h3 class="h6">{{ vehicule.marque }} {{ vehicule.modele }}</h3>
+                            <p class="text-muted small mb-1">
+                                {{ vehicule.motorisation }} — {{ vehicule.kilometrage }} km
+                                {% if vehicule.couleur %} — {{ vehicule.couleur }}{% endif %}
+                            </p>
+                            <p class="fw-bold mb-0">
+                                {{ vehicule.prix }} €
+                                {% if vehicule.statut == 'location' %}<span class="small text-muted fw-normal">/mois</span>{% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% else %}
+            <p class="text-muted">Aucun véhicule ne correspond à votre recherche.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    var $form = $('#filter-form');
+    var debounceTimer;
+
+    $form.find('select').on('change', function() {
+        $form.submit();
+    });
+
+    $form.find('input[type="number"]').on('input', function() {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function() {
+            $form.submit();
+        }, 600);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ vehicule.marque }} {{ vehicule.modele }}{% endblock %}
+
+{% block body %}
+<a href="{{ path('app_vehicule_search') }}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Retour aux résultats</a>
+<h1 class="h3 mb-4">{{ vehicule.marque }} {{ vehicule.modele }}</h1>
+
+<div class="row">
+    <div class="col-md-6">
+        {% if vehicule.vehiculePhotos|length > 0 %}
+        <div id="carousel-vehicule" class="carousel slide">
+            <div class="carousel-inner">
+                {% for photo in vehicule.vehiculePhotos %}
+                <div class="carousel-item {{ loop.first ? 'active' }}">
+                    <img src="/uploads/vehicules/{{ photo.filename }}" class="d-block w-100" style="max-height: 400px; object-fit: cover;">
+                </div>
+                {% endfor %}
+            </div>
+            {% if vehicule.vehiculePhotos|length > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#carousel-vehicule" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carousel-vehicule" data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <p><strong>Motorisation :</strong> {{ vehicule.motorisation }}</p>
+        <p><strong>Kilométrage :</strong> {{ vehicule.kilometrage }} km</p>
+        {% if vehicule.couleur %}<p><strong>Couleur :</strong> {{ vehicule.couleur }}</p>{% endif %}
+        <p><strong>État :</strong> {{ vehicule.etat }}</p>
+        <p class="fs-3 fw-bold">
+            {{ vehicule.prix }} €
+            {% if vehicule.statut == 'location' %}<span class="fs-6 text-muted">/mois</span>{% endif %}
+        </p>
+
+        {% if vehicule.statut == 'location' %}
+        <ul class="list-unstyled">
+            {% if vehicule.assurance %}<li>✓ Assurance tous risques incluse</li>{% endif %}
+            {% if vehicule.assistance %}<li>✓ Assistance dépannage incluse</li>{% endif %}
+            {% if vehicule.entretien %}<li>✓ Entretien et SAV inclus</li>{% endif %}
+            {% if vehicule.controleTechnique %}<li>✓ Contrôle technique inclus</li>{% endif %}
+        </ul>
+        {% endif %}
+
+        <a href="#" class="btn btn-primary">
+            {{ vehicule.statut == 'location' ? 'Faire une demande de location' : 'Faire une offre d\'achat' }}
+        </a>
+    </div>
+</div>
+{% endblock %}

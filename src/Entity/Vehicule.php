@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\String\Slugger\AsciiSlugger;
 
 #[ORM\Entity(repositoryClass: VehiculeRepository::class)]
 #[UniqueEntity(fields: ['immatriculation'], message: 'Cette immatriculation est deja utilisee par un autre vehicule.')]
@@ -65,6 +66,9 @@ class Vehicule
 
     #[ORM\Column]
     private ?\DateTimeImmutable $dateCreation = null;
+
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $couleur = null;
 
     public function __construct()
     {
@@ -273,5 +277,33 @@ class Vehicule
         $this->dateCreation = $dateCreation;
 
         return $this;
+    }
+
+    public function getCouleur(): ?string
+    {
+        return $this->couleur;
+    }
+
+    public function setCouleur(?string $couleur): static
+    {
+        $this->couleur = $couleur;
+
+        return $this;
+    }
+
+    public function getSlug(): string
+    {
+        $slugger = new AsciiSlugger();
+
+        $parts = array_filter([
+            $this->marque,
+            $this->modele,
+            $this->motorisation,
+            $this->couleur,
+        ]);
+
+        $slug = $slugger->slug(implode('-', $parts))->lower();
+
+        return $slug . '-' . $this->id;
     }
 }
