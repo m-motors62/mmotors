@@ -1,0 +1,13 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Basculer {{ vehicule.marque }} {{ vehicule.modele }}{% endblock %}
+
+{% block body %}
+<h1 class="h3 mb-4">Basculer {{ vehicule.marque }} {{ vehicule.modele }}</h1>
+
+<div class="card" style="max-width: 500px;">
+    <div class="card-body">
+        {% include 'admin/vehicule/_toggle_statut_form.html.twig' %}
+    </div>
+</div>
+{% endblock %}

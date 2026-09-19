@@ -59,7 +59,7 @@
                     <ul class="dropdown-menu dropdown-menu-end">
                         {% if vehicule.id not in vehiculeIdsWithActiveDossier %}
                             <li>
-                                <button type="button" class="dropdown-item btn-toggle-statut-vehicule" data-vehicule-id="{{ vehicule.id }}">
+                                <button type="button" class="dropdown-item btn-toggle-statut-vehicule" data-vehicule-id="{{ vehicule.id }}" data-bs-toggle="modal" data-bs-target="#toggleStatutModal">
                                     {{ vehicule.statut == 'location' ? 'Basculer en vente' : 'Basculer en location' }}
                                 </button>
                             </li>
@@ -98,6 +98,20 @@
         {% endfor %}
     </tbody>
 </table>
+
+<div class="modal fade" id="toggleStatutModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Changement de statut</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="toggle-statut-container">
+                <!-- Charge dynamiquement -->
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block javascripts %}
@@ -174,24 +188,30 @@ $(document).ready(function() {
     });
 
     $(document).on('click', '.btn-toggle-statut-vehicule', function() {
-        if (!confirm('Confirmer le changement de statut de ce vehicule ?')) {
-            return;
-        }
-
         var vehiculeId = $(this).data('vehicule-id');
         var url = '{{ path('app_admin_vehicule_index') }}/' + vehiculeId + '/basculer';
 
-        $.ajax({
-            url: url,
-            method: 'POST',
-            success: function(response) {
-                if (response.success) {
-                    window.location.reload();
+        $.get(url, function(html) {
+            $('#toggle-statut-container').html(html);
+        });
+
+        $(document).off('submit', '#toggle-statut-form').on('submit', '#toggle-statut-form', function(e) {
+            e.preventDefault();
+            var $form = $(this);
+
+            $.ajax({
+                url: url,
+                method: 'POST',
+                data: $form.serialize(),
+                success: function(response) {
+                    if (response.success) {
+                        window.location.reload();
+                    }
+                },
+                error: function(xhr) {
+                    $('#toggle-statut-container').html(xhr.responseJSON.html);
                 }
-            },
-            error: function(xhr) {
-                alert(xhr.responseJSON.message);
-            }
+            });
         });
     });
 });

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Vehicule;
 use App\Entity\VehiculePhoto;
+use App\Form\VehiculeToggleStatutType;
 use App\Form\VehiculeType;
 use App\Repository\ActionLogRepository;
 use App\Repository\DossierRepository;
@@ -168,8 +169,8 @@ class AdminVehiculeController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/basculer', name: 'app_admin_vehicule_toggle_statut', requirements: ['id' => '\d+'], methods: ['POST'])]
-    public function toggleStatut(Vehicule $vehicule, EntityManagerInterface $entityManager, ActionLogger $actionLogger, DossierRepository $dossierRepository): Response
+    #[Route('/{id}/basculer', name: 'app_admin_vehicule_toggle_statut', requirements: ['id' => '\d+'])]
+    public function toggleStatut(Vehicule $vehicule, Request $request, EntityManagerInterface $entityManager, ActionLogger $actionLogger, DossierRepository $dossierRepository): Response
     {
         $blockingStatuses = ['en_cours', 'valide'];
 
@@ -179,26 +180,70 @@ class AdminVehiculeController extends AbstractController
         ]);
 
         if ($activeDossierCount > 0) {
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Ce vehicule a un dossier en cours ou valide et ne peut pas etre bascule.',
+                ], 422);
+            }
+            throw $this->createAccessDeniedException();
+        }
+
+        $nouveauStatut = $vehicule->getStatut() === 'location' ? 'vente' : 'location';
+
+        $form = $this->createForm(VehiculeToggleStatutType::class, null, [
+            'nouveau_statut' => $nouveauStatut,
+        ]);
+        $form->handleRequest($request);
+
+        if ($request->isXmlHttpRequest() && !$form->isSubmitted()) {
+            return $this->render('admin/vehicule/_toggle_statut_form.html.twig', [
+                'form' => $form,
+                'vehicule' => $vehicule,
+                'nouveauStatut' => $nouveauStatut,
+            ]);
+        }
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $ancienStatut = $vehicule->getStatut();
+            $ancienPrix = $vehicule->getPrix();
+            $nouveauPrix = $form->get('prix')->getData();
+
+            $vehicule->setStatut($nouveauStatut);
+            $vehicule->setPrix($nouveauPrix);
+
+            $entityManager->flush();
+
+            $actionLogger->log(
+                'bascule_vehicule',
+                sprintf('A bascule le vehicule %s %s (%s) de %s (%s EUR) vers %s (%s EUR)', $vehicule->getMarque(), $vehicule->getModele(), $vehicule->getImmatriculation(), $ancienStatut, $ancienPrix, $nouveauStatut, $nouveauPrix),
+                'Vehicule',
+                $vehicule->getId()
+            );
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json(['success' => true]);
+            }
+
+            return $this->redirectToRoute('app_admin_vehicule_index');
+        }
+
+        if ($request->isXmlHttpRequest()) {
             return $this->json([
                 'success' => false,
-                'message' => 'Ce vehicule a un dossier en cours ou valide et ne peut pas etre bascule.',
+                'html' => $this->renderView('admin/vehicule/_toggle_statut_form.html.twig', [
+                    'form' => $form,
+                    'vehicule' => $vehicule,
+                    'nouveauStatut' => $nouveauStatut,
+                ]),
             ], 422);
         }
 
-        $ancienStatut = $vehicule->getStatut();
-        $nouveauStatut = $ancienStatut === 'location' ? 'vente' : 'location';
-        $vehicule->setStatut($nouveauStatut);
-
-        $entityManager->flush();
-
-        $actionLogger->log(
-            'bascule_vehicule',
-            sprintf('A bascule le vehicule %s %s (%s) de %s vers %s', $vehicule->getMarque(), $vehicule->getModele(), $vehicule->getImmatriculation(), $ancienStatut, $nouveauStatut),
-            'Vehicule',
-            $vehicule->getId()
-        );
-
-        return $this->json(['success' => true, 'nouveauStatut' => $nouveauStatut]);
+        return $this->render('admin/vehicule/toggle_statut.html.twig', [
+            'form' => $form,
+            'vehicule' => $vehicule,
+            'nouveauStatut' => $nouveauStatut,
+        ]);
     }
 
     #[Route('/photo/{id}/supprimer', name: 'app_admin_vehicule_photo_delete', requirements: ['id' => '\d+'], methods: ['POST'])]

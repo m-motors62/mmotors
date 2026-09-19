@@ -1,0 +1,8 @@
+<p>
+    Basculer <strong>{{ vehicule.marque }} {{ vehicule.modele }}</strong> vers
+    <strong>{{ nouveauStatut == 'vente' ? 'Vente' : 'Location' }}</strong>.
+</p>
+{{ form_start(form, {'attr': {'id': 'toggle-statut-form'}}) }}
+    {{ form_row(form.prix) }}
+    <button type="submit" class="btn btn-primary mt-3">Confirmer la bascule</button>
+{{ form_end(form) }}
