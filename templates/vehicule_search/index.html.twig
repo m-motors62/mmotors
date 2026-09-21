@@ -14,7 +14,7 @@
                         <select name="mode" class="form-select">
                             <option value="" {{ mode is null ? 'selected' }}>Tous</option>
                             {% for m in modesDisponibles %}
-                            <option value="{{ m }}" {{ mode == m ? 'selected' }}>{{ m == 'location' ? 'Location' : 'Vente' }}</option>
+                            <option value="{{ m }}" {{ mode == m ? 'selected' }}>{{ m == 'location' ? 'Location' : 'Achat' }}</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -79,8 +79,8 @@
                                     <span class="text-muted">Pas de photo</span>
                                 </div>
                             {% endif %}
-                            <div class="ribbon ribbon-{{ vehicule.statut }}">
-                                {{ vehicule.statut == 'location' ? 'Location' : 'Vente' }}
+                            <div class="ribbon ribbon-{{ vehicule.statut == 'location' ? 'location' : 'achat' }}">
+                                {{ vehicule.statut == 'location' ? 'Location' : 'Achat' }}
                             </div>
                         </div>
                         <div class="card-body">
