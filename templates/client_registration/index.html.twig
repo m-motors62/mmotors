@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un compte{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h1 class="h4 mb-4">Créer un compte</h1>
+                {{ form_start(form) }}
+                    <div class="row">
+                        <div class="col-md-6">{{ form_row(form.nom) }}</div>
+                        <div class="col-md-6">{{ form_row(form.prenom) }}</div>
+                    </div>
+                    {{ form_row(form.email) }}
+                    {{ form_row(form.telephone) }}
+                    {{ form_row(form.password.first) }}
+                    {{ form_row(form.password.second) }}
+                    <button type="submit" class="btn btn-primary mt-3 w-100">S'inscrire</button>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

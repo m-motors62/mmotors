@@ -33,8 +33,17 @@
 </head>
 <body>
     <nav class="navbar navbar-dark">
-        <div class="container">
+        <div class="container d-flex justify-content-between align-items-center">
             <a class="navbar-brand fw-bold" href="{{ path('app_home') }}">M-Motors</a>
+            <div>
+                {% if app.user %}
+                    <span class="text-white me-3">{{ app.user.contact.prenom }}</span>
+                    <a href="{{ path('app_client_logout') }}" class="btn btn-outline-light btn-sm">Déconnexion</a>
+                {% else %}
+                    <a href="{{ path('app_client_login') }}" class="btn btn-outline-light btn-sm me-2">Connexion</a>
+                    <a href="{{ path('app_client_registration') }}" class="btn btn-light btn-sm">S'inscrire</a>
+                {% endif %}
+            </div>
         </div>
     </nav>
 

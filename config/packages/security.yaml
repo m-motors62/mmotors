@@ -11,7 +11,6 @@ security:
         app_client_provider:
             entity:
                 class: App\Entity\Client
-                property: contact.email
 
     role_hierarchy:
         ROLE_ADMIN: [ROLE_GESTIONNAIRE, ROLE_COMMERCIAL]
@@ -44,6 +43,8 @@ security:
                 check_path: app_client_login
             logout:
                 path: app_client_logout
+                # where to redirect after logout
+                # target: app_any_route
 
     access_control:
         - { path: ^/admin/login, roles: PUBLIC_ACCESS }

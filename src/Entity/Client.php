@@ -24,6 +24,12 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private array $roles = [];
 
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $isVerified = false;
+
+    #[ORM\Column(length: 64, nullable: true)]
+    private ?string $verificationToken = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -76,5 +82,29 @@ class Client implements UserInterface, PasswordAuthenticatedUserInterface
     public function eraseCredentials(): void
     {
         // Rien à effacer ici (pas de données temporaires sensibles à nettoyer)
+    }
+
+    public function isVerified(): ?bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): static
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
+
+    public function getVerificationToken(): ?string
+    {
+        return $this->verificationToken;
+    }
+
+    public function setVerificationToken(?string $verificationToken): static
+    {
+        $this->verificationToken = $verificationToken;
+
+        return $this;
     }
 }
