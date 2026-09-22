@@ -37,8 +37,17 @@
             <a class="navbar-brand fw-bold" href="{{ path('app_home') }}">M-Motors</a>
             <div>
                 {% if app.user %}
-                    <span class="text-white me-3">{{ app.user.contact.prenom }}</span>
-                    <a href="{{ path('app_client_logout') }}" class="btn btn-outline-light btn-sm">Déconnexion</a>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            {{ app.user.contact.prenom }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{{ path('app_espace_client_dashboard') }}">Mon espace</a></li>
+                            <li><a class="dropdown-item" href="{{ path('app_espace_client_profile') }}">Modifier mon profil</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ path('app_client_logout') }}">Déconnexion</a></li>
+                        </ul>
+                    </div>
                 {% else %}
                     <a href="{{ path('app_client_login') }}" class="btn btn-outline-light btn-sm me-2">Connexion</a>
                     <a href="{{ path('app_client_registration') }}" class="btn btn-light btn-sm">S'inscrire</a>
