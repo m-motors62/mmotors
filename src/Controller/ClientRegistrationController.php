@@ -49,6 +49,7 @@ class ClientRegistrationController extends AbstractController
             $contact->setEmail($email);
             $contact->setTelephone($form->get('telephone')->getData());
             $contact->setAdresse($form->get('adresse')->getData());
+            $contact->setComplementAdresse($form->get('complementAdresse')->getData());
             $contact->setCodePostal($form->get('codePostal')->getData());
             $contact->setVille($form->get('ville')->getData());
 

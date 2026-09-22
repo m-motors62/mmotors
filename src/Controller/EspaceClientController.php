@@ -33,6 +33,7 @@ class EspaceClientController extends AbstractController
         $form->get('prenom')->setData($contact->getPrenom());
         $form->get('telephone')->setData($contact->getTelephone());
         $form->get('adresse')->setData($contact->getAdresse());
+        $form->get('complementAdresse')->setData($contact->getComplementAdresse());
         $form->get('codePostal')->setData($contact->getCodePostal());
         $form->get('ville')->setData($contact->getVille());
         $form->handleRequest($request);
@@ -42,6 +43,7 @@ class EspaceClientController extends AbstractController
             $contact->setPrenom($form->get('prenom')->getData());
             $contact->setTelephone($form->get('telephone')->getData());
             $contact->setAdresse($form->get('adresse')->getData());
+            $contact->setComplementAdresse($form->get('complementAdresse')->getData());
             $contact->setCodePostal($form->get('codePostal')->getData());
             $contact->setVille($form->get('ville')->getData());
             $entityManager->flush();

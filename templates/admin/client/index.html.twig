@@ -12,6 +12,7 @@
             <th>Email</th>
             <th>Téléphone</th>
             <th>Statut</th>
+            <th class="text-end">Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -26,6 +27,9 @@
                 {% else %}
                     <span class="badge bg-secondary">Non vérifié</span>
                 {% endif %}
+            </td>
+            <td class="text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-client" data-client-id="{{ client.id }}">Supprimer</button>
             </td>
         </tr>
         {% else %}
@@ -49,6 +53,28 @@ $(document).ready(function() {
             paginate: { previous: "Précédent", next: "Suivant" },
             zeroRecords: "Aucun client ne correspond à la recherche"
         }
+    });
+
+    $(document).on('click', '.btn-delete-client', function() {
+        if (!confirm('Supprimer definitivement ce client ? Cette action est irreversible.')) {
+            return;
+        }
+
+        var clientId = $(this).data('client-id');
+        var url = '{{ path('app_admin_client_index') }}/' + clientId + '/supprimer';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                }
+            },
+            error: function(xhr) {
+                alert(xhr.responseJSON.message);
+            }
+        });
     });
 });
 </script>

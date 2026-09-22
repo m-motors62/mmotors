@@ -31,6 +31,11 @@ class ClientProfileType extends AbstractType
                 'required' => false,
                 'attr' => ['autocomplete' => 'off'],
             ])
+            ->add('complementAdresse', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'label' => 'Complement d\'adresse (optionnel)',
+            ])
             ->add('codePostal', TextType::class, [
                 'mapped' => false,
                 'required' => false,

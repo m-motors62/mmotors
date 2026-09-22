@@ -34,6 +34,9 @@ class Contact
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $ville = null;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $complementAdresse = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -119,6 +122,18 @@ class Contact
     public function setVille(?string $ville): static
     {
         $this->ville = $ville;
+
+        return $this;
+    }
+
+    public function getComplementAdresse(): ?string
+    {
+        return $this->complementAdresse;
+    }
+
+    public function setComplementAdresse(?string $complementAdresse): static
+    {
+        $this->complementAdresse = $complementAdresse;
 
         return $this;
     }
