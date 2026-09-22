@@ -1,0 +1,55 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Clients{% endblock %}
+
+{% block body %}
+<h1 class="h3 mb-4">Clients</h1>
+
+<table class="table table-striped bg-white" id="client-table">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Téléphone</th>
+            <th>Statut</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for client in clients %}
+        <tr>
+            <td>{{ client.contact.prenom }} {{ client.contact.nom }}</td>
+            <td>{{ client.contact.email }}</td>
+            <td>{{ client.contact.telephone }}</td>
+            <td>
+                {% if client.isVerified %}
+                    <span class="badge bg-success">Vérifié</span>
+                {% else %}
+                    <span class="badge bg-secondary">Non vérifié</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="4" class="text-center text-muted">Aucun client enregistré.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    $('#client-table').DataTable({
+        language: {
+            search: "Rechercher :",
+            lengthMenu: "Afficher _MENU_ clients",
+            info: "_START_ à _END_ sur _TOTAL_ clients",
+            infoEmpty: "Aucun client",
+            paginate: { previous: "Précédent", next: "Suivant" },
+            zeroRecords: "Aucun client ne correspond à la recherche"
+        }
+    });
+});
+</script>
+{% endblock %}

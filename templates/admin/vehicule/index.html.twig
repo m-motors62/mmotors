@@ -1,9 +1,6 @@
 {% extends 'admin/base.html.twig' %}
 
 {% block title %}Véhicules{% endblock %}
-{% block stylesheets %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/css/dataTables.bootstrap5.min.css">
-{% endblock %}
 {% block body %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">Véhicules</h1>
@@ -16,7 +13,12 @@
         <a href="{{ path('app_admin_vehicule_new_vente') }}" class="btn btn-primary">Ajouter (vente)</a>
     </div>
 </div>
-
+<div class="mb-3" style="max-width: 250px;">
+    <label class="form-label small">Filtrer par statut</label>
+    <select id="filter-statut-vehicule" class="form-select form-select-sm">
+        <option value="">Tous</option>
+    </select>
+</div>
 <table class="table table-striped bg-white" id="vehicule-table">
     <thead>
         <tr>
@@ -115,11 +117,9 @@
 {% endblock %}
 
 {% block javascripts %}
-<script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.11/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.11/js/dataTables.bootstrap5.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#vehicule-table').DataTable({
+    var table = $('#vehicule-table').DataTable({
         order: [[5, 'desc']],
         language: {
             search: "Rechercher :",
@@ -135,6 +135,21 @@ $(document).ready(function() {
         columnDefs: [
             { orderable: false, targets: -1 }
         ]
+    });
+
+    var statutsUniques = new Set();
+    table.column(2).data().each(function(value) {
+        var texteBrut = $(value).text().replace('Archivé', '').trim();
+        if (texteBrut) statutsUniques.add(texteBrut);
+    });
+
+    [...statutsUniques].sort().forEach(function(statut) {
+        $('#filter-statut-vehicule').append('<option value="' + statut + '">' + statut + '</option>');
+    });
+
+    $('#filter-statut-vehicule').on('change', function() {
+        var valeur = $(this).val();
+        table.column(2).search(valeur ? valeur : '', false, false).draw();
     });
 
     $('#toggle-archives').on('change', function() {
