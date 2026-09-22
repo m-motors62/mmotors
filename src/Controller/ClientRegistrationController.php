@@ -48,6 +48,9 @@ class ClientRegistrationController extends AbstractController
             $contact->setPrenom($form->get('prenom')->getData());
             $contact->setEmail($email);
             $contact->setTelephone($form->get('telephone')->getData());
+            $contact->setAdresse($form->get('adresse')->getData());
+            $contact->setCodePostal($form->get('codePostal')->getData());
+            $contact->setVille($form->get('ville')->getData());
 
             $token = bin2hex(random_bytes(32));
 

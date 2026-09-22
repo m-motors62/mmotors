@@ -35,6 +35,19 @@ class ClientRegistrationType extends AbstractType
                 'mapped' => false,
                 'constraints' => [new NotBlank()],
             ])
+            ->add('adresse', TextType::class, [
+                'mapped' => false,
+                'constraints' => [new NotBlank()],
+                'attr' => ['autocomplete' => 'off'],
+            ])
+            ->add('codePostal', TextType::class, [
+                'mapped' => false,
+                'constraints' => [new NotBlank()],
+            ])
+            ->add('ville', TextType::class, [
+                'mapped' => false,
+                'constraints' => [new NotBlank()],
+            ])
             ->add('password', RepeatedType::class, [
                 'type' => PasswordType::class,
                 'mapped' => false,

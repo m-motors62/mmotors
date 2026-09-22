@@ -26,6 +26,19 @@ class ClientProfileType extends AbstractType
                 'mapped' => false,
                 'constraints' => [new NotBlank()],
             ])
+            ->add('adresse', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+                'attr' => ['autocomplete' => 'off'],
+            ])
+            ->add('codePostal', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+            ])
+            ->add('ville', TextType::class, [
+                'mapped' => false,
+                'required' => false,
+            ])
         ;
     }
 

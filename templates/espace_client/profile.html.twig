@@ -3,6 +3,7 @@
 {% block title %}Mon profil{% endblock %}
 
 {% block body %}
+<a href="{{ path('app_espace_client_dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Retour au tableau de bord</a>
 <h1 class="h4 mb-4">Mon profil</h1>
 
 <div class="card" style="max-width: 500px;">
@@ -11,8 +12,62 @@
             {{ form_row(form.nom) }}
             {{ form_row(form.prenom) }}
             {{ form_row(form.telephone) }}
+
+            <div class="mb-3 position-relative">
+                <label for="{{ form.adresse.vars.id }}" class="form-label">Adresse</label>
+                <input type="text" id="{{ form.adresse.vars.id }}" name="{{ form.adresse.vars.full_name }}" class="form-control" value="{{ form.adresse.vars.value }}" autocomplete="off">
+                <div id="adresse-suggestions" class="list-group position-absolute w-100" style="z-index: 1000;"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-4">{{ form_row(form.codePostal) }}</div>
+                <div class="col-md-8">{{ form_row(form.ville) }}</div>
+            </div>
+
             <button type="submit" class="btn btn-primary mt-3">Enregistrer</button>
-        {{ form_end(form) }}
+        {{ form_row(form._token) }}
+        {{ form_end(form, {'render_rest': false}) }}
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    var $adresseInput = $('#{{ form.adresse.vars.id }}');
+    var $suggestions = $('#adresse-suggestions');
+    var debounceTimer;
+
+    $adresseInput.on('input', function() {
+        var texte = $(this).val();
+        clearTimeout(debounceTimer);
+
+        if (texte.length < 3) {
+            $suggestions.empty();
+            return;
+        }
+
+        debounceTimer = setTimeout(function() {
+            $.get('{{ path('app_api_adresses') }}', { q: texte }, function(resultats) {
+                $suggestions.empty();
+                resultats.forEach(function(r) {
+                    var $item = $('<button type="button" class="list-group-item list-group-item-action"></button>').text(r.label);
+                    $item.on('click', function() {
+                        $adresseInput.val(r.adresse);
+                        $('#{{ form.codePostal.vars.id }}').val(r.codePostal);
+                        $('#{{ form.ville.vars.id }}').val(r.ville);
+                        $suggestions.empty();
+                    });
+                    $suggestions.append($item);
+                });
+            });
+        }, 400);
+    });
+
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('#adresse-suggestions, #{{ form.adresse.vars.id }}').length) {
+            $suggestions.empty();
+        }
+    });
+});
+</script>
 {% endblock %}
