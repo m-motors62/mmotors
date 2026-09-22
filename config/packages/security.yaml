@@ -38,6 +38,7 @@ security:
             lazy: true
             pattern: ^/
             provider: app_client_provider
+            user_checker: App\Security\ClientChecker
             form_login:
                 login_path: app_client_login
                 check_path: app_client_login

@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Client;
 use App\Entity\Contact;
 use App\Form\ClientRegistrationType;
+use App\Form\ResendVerificationType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -99,5 +100,45 @@ class ClientRegistrationController extends AbstractController
 
         $this->addFlash('success', 'Votre email a ete confirme. Vous pouvez maintenant vous connecter.');
         return $this->redirectToRoute('app_client_login');
+    }
+
+    #[Route('/renvoyer-confirmation', name: 'app_client_resend_verification')]
+    public function resendVerification(Request $request, EntityManagerInterface $entityManager, MailerInterface $mailer): Response
+    {
+        $form = $this->createForm(ResendVerificationType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $email = $form->get('email')->getData();
+            $contact = $entityManager->getRepository(Contact::class)->findOneBy(['email' => $email]);
+            $client = $contact ? $entityManager->getRepository(Client::class)->findOneBy(['contact' => $contact]) : null;
+
+            if ($client && !$client->isVerified()) {
+                $token = bin2hex(random_bytes(32));
+                $client->setVerificationToken($token);
+                $entityManager->flush();
+
+                $confirmUrl = $this->generateUrl('app_client_verify_email', ['token' => $token], UrlGeneratorInterface::ABSOLUTE_URL);
+
+                $mailMessage = (new Email())
+                    ->from('m-motors@freemaxi.fr')
+                    ->to($email)
+                    ->subject('Confirmez votre inscription chez M-Motors')
+                    ->text("Bonjour {$contact->getPrenom()},\n\nVoici un nouveau lien pour confirmer votre email :\n{$confirmUrl}\n\nCordialement,\nL'equipe M-Motors");
+
+                try {
+                    $mailer->send($mailMessage);
+                } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+                    // Silencieux volontairement, voir explication ci-dessous
+                }
+            }
+
+            $this->addFlash('success', 'Si un compte non confirme existe avec cet email, un nouveau lien vient de lui etre envoye.');
+            return $this->redirectToRoute('app_client_login');
+        }
+
+        return $this->render('client_registration/resend_verification.html.twig', [
+            'form' => $form,
+        ]);
     }
 }
