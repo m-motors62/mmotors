@@ -10,13 +10,16 @@
                 <h2 class="h6">Filtres</h2>
                 <form method="get" id="filter-form" action="{{ path('app_vehicule_search') }}">
                     <div class="mb-3">
-                        <label class="form-label">Mode</label>
-                        <select name="mode" class="form-select">
-                            <option value="" {{ mode is null ? 'selected' }}>Tous</option>
+                        <label class="form-label d-block">Mode</label>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="mode" id="mode-tous" value="" {{ mode is empty ? 'checked' }} autocomplete="off">
+                            <label class="btn btn-outline-primary" for="mode-tous">Tous</label>
+
                             {% for m in modesDisponibles %}
-                            <option value="{{ m }}" {{ mode == m ? 'selected' }}>{{ m == 'location' ? 'Location' : 'Achat' }}</option>
+                            <input type="radio" class="btn-check" name="mode" id="mode-{{ m }}" value="{{ m }}" {{ mode == m ? 'checked' }} autocomplete="off">
+                            <label class="btn btn-outline-primary" for="mode-{{ m }}">{{ m == 'location' ? 'Location' : 'Achat' }}</label>
                             {% endfor %}
-                        </select>
+                        </div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Marque</label>
@@ -111,7 +114,7 @@ $(document).ready(function() {
     var $form = $('#filter-form');
     var debounceTimer;
 
-    $form.find('select').on('change', function() {
+    $form.find('select, input[type="radio"]').on('change', function() {
         $form.submit();
     });
 
