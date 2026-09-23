@@ -1,0 +1,43 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Deposer un dossier{% endblock %}
+
+{% block body %}
+<a href="{{ path('app_vehicule_show', {'slug': vehicule.slug}) }}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Retour au véhicule</a>
+
+<h1 class="h4 mb-2">Dépôt de dossier — {{ vehicule.marque }} {{ vehicule.modele }}</h1>
+<p class="text-muted mb-4">
+    {{ typeDossier == 'location' ? 'Demande de location' : 'Offre d\'achat' }}
+</p>
+
+<div class="alert alert-info">
+    <strong>Pièces requises :</strong>
+    <ul class="mb-0 mt-2">
+        <li>Carte d'identité</li>
+        <li>Justificatif de domicile</li>
+        {% if typeDossier == 'location' %}
+        <li>3 dernières fiches de paie</li>
+        {% endif %}
+    </ul>
+    <small class="text-muted">Formats acceptés : PDF, JPEG, PNG — {{ maxFileSizeMo }} Mo maximum par fichier.</small>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-body">
+        {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+            {{ form_errors(form) }}
+
+            {{ form_row(form.carteIdentite) }}
+            {{ form_row(form.justificatifDomicile) }}
+
+            {% if typeDossier == 'location' %}
+                {{ form_row(form.fichePaie1) }}
+                {{ form_row(form.fichePaie2) }}
+                {{ form_row(form.fichePaie3) }}
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary mt-3 w-100">Déposer mon dossier</button>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

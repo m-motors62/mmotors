@@ -65,4 +65,24 @@ class VehiculeSearchController extends AbstractController
             'vehicule' => $vehicule,
         ]);
     }
+
+    #[Route('/vehicule/{slug}/deposer-dossier', name: 'app_vehicule_deposer_dossier', requirements: ['slug' => '.+-\d+'])]
+    public function redirectToDeposit(string $slug, Request $request, VehiculeRepository $vehiculeRepository): Response
+    {
+        preg_match('/(\d+)$/', $slug, $matches);
+        $id = $matches[1] ?? null;
+
+        $vehicule = $id ? $vehiculeRepository->find($id) : null;
+
+        if (!$vehicule || $vehicule->isArchived()) {
+            throw $this->createNotFoundException();
+        }
+
+        if (!$this->getUser()) {
+            $request->getSession()->set('vehicule_intention_id', $vehicule->getId());
+            return $this->redirectToRoute('app_client_login');
+        }
+
+        return $this->redirectToRoute('app_dossier_new', ['vehiculeId' => $vehicule->getId()]);
+    }
 }

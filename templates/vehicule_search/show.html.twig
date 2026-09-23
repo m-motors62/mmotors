@@ -47,7 +47,7 @@
         </ul>
         {% endif %}
 
-        <a href="#" class="btn btn-primary">
+        <a href="{{ path('app_vehicule_deposer_dossier', {'slug': vehicule.slug}) }}" class="btn btn-primary">
             {{ vehicule.statut == 'location' ? 'Faire une demande de location' : 'Faire une offre d\'achat' }}
         </a>
     </div>

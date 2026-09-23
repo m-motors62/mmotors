@@ -8,7 +8,8 @@
 <div class="card" style="max-width: 500px;">
     <div class="card-body">
         {{ form_start(form) }}
-            {{ form_row(form.settingValue) }}
+            {{ form_row(form.adminAccessKey) }}
+            {{ form_row(form.maxFileSizeMo) }}
             <button type="submit" class="btn btn-primary mt-3">Enregistrer</button>
         {{ form_end(form) }}
     </div>

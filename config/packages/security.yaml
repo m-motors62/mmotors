@@ -39,13 +39,10 @@ security:
             pattern: ^/
             provider: app_client_provider
             user_checker: App\Security\ClientChecker
-            form_login:
-                login_path: app_client_login
-                check_path: app_client_login
+            custom_authenticators:
+                - App\Security\ClientLoginAuthenticator
             logout:
                 path: app_client_logout
-                # where to redirect after logout
-                # target: app_any_route
 
     access_control:
         - { path: ^/admin/login, roles: PUBLIC_ACCESS }
