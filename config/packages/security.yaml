@@ -54,6 +54,7 @@ security:
         - { path: ^/admin/utilisateurs, roles: ROLE_GESTIONNAIRE }
         - { path: ^/admin/vehicules, roles: ROLE_COMMERCIAL }
         - { path: ^/admin/clients, roles: ROLE_COMMERCIAL }
+        - { path: ^/admin/dossiers, roles: ROLE_COMMERCIAL }
         - { path: ^/admin, roles: ROLE_COMMERCIAL }
         - { path: ^/espace-client, roles: ROLE_CLIENT }
 

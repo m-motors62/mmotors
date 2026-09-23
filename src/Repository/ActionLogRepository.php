@@ -63,4 +63,32 @@ class ActionLogRepository extends ServiceEntityRepository
 
         return [];
     }
+
+    public function isDossierConsulted(int $dossierId): bool
+    {
+        $count = $this->count([
+            'actionType' => 'consultation_dossier',
+            'targetType' => 'Dossier',
+            'targetId' => $dossierId,
+        ]);
+
+        return $count > 0;
+    }
+
+    /**
+     * @return int[]
+     */
+    public function getConsultedDossierIds(): array
+    {
+        $result = $this->createQueryBuilder('a')
+            ->select('DISTINCT a.targetId')
+            ->andWhere('a.actionType = :type')
+            ->andWhere('a.targetType = :targetType')
+            ->setParameter('type', 'consultation_dossier')
+            ->setParameter('targetType', 'Dossier')
+            ->getQuery()
+            ->getScalarResult();
+
+        return array_map('intval', array_column($result, 'targetId'));
+    }
 }

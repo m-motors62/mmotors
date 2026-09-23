@@ -43,4 +43,21 @@ class DossierRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return Dossier[]
+     */
+    public function findAllWithRelations(): array
+    {
+        return $this->createQueryBuilder('d')
+            ->leftJoin('d.vehicule', 'vehicule')
+            ->addSelect('vehicule')
+            ->leftJoin('d.client', 'client')
+            ->addSelect('client')
+            ->leftJoin('client.contact', 'contact')
+            ->addSelect('contact')
+            ->orderBy('d.dateCreation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -1,0 +1,95 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Dossiers{% endblock %}
+
+{% block body %}
+<h1 class="h3 mb-4">Dossiers</h1>
+
+<ul class="nav nav-tabs mb-3" id="dossier-tabs">
+    <li class="nav-item">
+        <button class="nav-link active" data-statut="">Tous</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-statut="En cours">En cours</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-statut="Validé">Validés</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-statut="Refusé">Refusés</button>
+    </li>
+    <li class="nav-item">
+        <button class="nav-link" data-statut="Terminé">Terminés</button>
+    </li>
+</ul>
+
+<table class="table table-striped bg-white" id="dossier-table">
+    <thead>
+        <tr>
+            <th>Client</th>
+            <th>Véhicule</th>
+            <th>Type</th>
+            <th>Statut</th>
+            <th>Déposé le</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for dossier in dossiers %}
+        <tr>
+            <td>
+                <a href="{{ path('app_admin_dossier_show', {'id': dossier.id}) }}" class="text-decoration-none">
+                    {% if dossier.id not in consultedIds %}
+                        <span class="badge bg-danger rounded-pill me-1" title="Non consulté">&nbsp;</span>
+                    {% endif %}
+                    {{ dossier.client.contact.prenom }} {{ dossier.client.contact.nom }}
+                </a>
+            </td>
+            <td>{{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}</td>
+            <td>{{ dossier.type == 'location' ? 'Location' : 'Achat' }}</td>
+            <td>
+                {% if dossier.statut == 'en_cours' %}
+                    <span class="badge bg-warning">En cours</span>
+                {% elseif dossier.statut == 'valide' %}
+                    <span class="badge bg-success">Validé</span>
+                {% elseif dossier.statut == 'refuse' %}
+                    <span class="badge bg-danger">Refusé</span>
+                {% elseif dossier.statut == 'termine' %}
+                    <span class="badge bg-secondary">Terminé</span>
+                {% endif %}
+            </td>
+            <td>{{ dossier.dateCreation|date('d/m/Y H:i') }}</td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" class="text-center text-muted">Aucun dossier enregistré.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    var table = $('#dossier-table').DataTable({
+        order: [[4, 'desc']],
+        language: {
+            search: "Rechercher :",
+            lengthMenu: "Afficher _MENU_ dossiers",
+            info: "_START_ à _END_ sur _TOTAL_ dossiers",
+            infoEmpty: "Aucun dossier",
+            paginate: { previous: "Précédent", next: "Suivant" },
+            zeroRecords: "Aucun dossier ne correspond à la recherche"
+        }
+    });
+
+    $('#dossier-tabs .nav-link').on('click', function() {
+        $('#dossier-tabs .nav-link').removeClass('active');
+        $(this).addClass('active');
+
+        var valeur = $(this).data('statut');
+        table.column(3).search(valeur, false, false).draw();
+    });
+});
+</script>
+{% endblock %}
