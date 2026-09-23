@@ -20,7 +20,6 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/dossier')]
-#[IsGranted('ROLE_CLIENT')]
 class DossierController extends AbstractController
 {
     private const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
@@ -33,6 +32,7 @@ class DossierController extends AbstractController
     }
 
     #[Route('/nouveau/{vehiculeId}', name: 'app_dossier_new', requirements: ['vehiculeId' => '\d+'])]
+    #[IsGranted('ROLE_CLIENT')]
     public function new(int $vehiculeId, Request $request, VehiculeRepository $vehiculeRepository, DossierRepository $dossierRepository, EntityManagerInterface $entityManager, DocumentUploader $documentUploader, MailerInterface $mailer, ActionLogger $actionLogger): Response
     {
         $vehicule = $vehiculeRepository->find($vehiculeId);
@@ -150,5 +150,29 @@ class DossierController extends AbstractController
             'typeDossier' => $typeDossier,
             'maxFileSizeMo' => $maxFileSizeMo,
         ]);
+    }
+
+    #[Route('/document/{id}/telecharger', name: 'app_document_download', requirements: ['id' => '\d+'])]
+    public function downloadDocument(Document $document, DocumentUploader $documentUploader): Response
+    {
+        $dossier = $document->getDossier();
+
+        /** @var Client|null $client */
+        $client = $this->getUser() instanceof Client ? $this->getUser() : null;
+
+        $estProprietaire = $client && $dossier->getClient()->getId() === $client->getId();
+        $estCommercial = $this->isGranted('ROLE_COMMERCIAL');
+
+        if (!$estProprietaire && !$estCommercial) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $filePath = $documentUploader->getFilePath($document->getNomFichier());
+
+        if (!file_exists($filePath)) {
+            throw $this->createNotFoundException();
+        }
+
+        return $this->file($filePath, $document->getNomFichier(), \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_INLINE);
     }
 }
