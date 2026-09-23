@@ -128,6 +128,15 @@ class DossierController extends AbstractController
             );
 
             $contact = $client->getContact();
+
+            $actionLogger->log(
+                'depot_dossier_vehicule',
+                sprintf('Un dossier de %s a ete depose par %s %s', $typeDossier, $contact->getPrenom(), $contact->getNom()),
+                'Vehicule',
+                $vehicule->getId()
+            );
+
+            $contact = $client->getContact();
             $mailMessage = (new Email())
                 ->from('m-motors@freemaxi.fr')
                 ->to($contact->getEmail())
