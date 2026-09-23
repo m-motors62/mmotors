@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Client;
+use App\Entity\Dossier;
+use App\Repository\DossierRepository;
 use App\Form\ClientProfileType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -54,6 +56,34 @@ class EspaceClientController extends AbstractController
 
         return $this->render('espace_client/profile.html.twig', [
             'form' => $form,
+        ]);
+    }
+
+    #[Route('/dossiers', name: 'app_espace_client_dossiers')]
+    public function dossiers(DossierRepository $dossierRepository): Response
+    {
+        /** @var Client $client */
+        $client = $this->getUser();
+
+        $dossiers = $dossierRepository->findByClient($client);
+
+        return $this->render('espace_client/dossiers.html.twig', [
+            'dossiers' => $dossiers,
+        ]);
+    }
+
+    #[Route('/dossiers/{id}', name: 'app_espace_client_dossier_show', requirements: ['id' => '\d+'])]
+    public function dossierShow(Dossier $dossier): Response
+    {
+        /** @var Client $client */
+        $client = $this->getUser();
+
+        if ($dossier->getClient()->getId() !== $client->getId()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        return $this->render('espace_client/dossier_show.html.twig', [
+            'dossier' => $dossier,
         ]);
     }
 }

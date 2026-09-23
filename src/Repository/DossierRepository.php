@@ -28,4 +28,19 @@ class DossierRepository extends ServiceEntityRepository
 
         return $count > 0;
     }
+
+    /**
+     * @return Dossier[]
+     */
+    public function findByClient(Client $client): array
+    {
+        return $this->createQueryBuilder('d')
+            ->leftJoin('d.vehicule', 'vehicule')
+            ->addSelect('vehicule')
+            ->andWhere('d.client = :client')
+            ->setParameter('client', $client)
+            ->orderBy('d.dateCreation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

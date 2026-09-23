@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Repository\VehiculeRepository;
+use App\Repository\DossierRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -50,7 +51,7 @@ class VehiculeSearchController extends AbstractController
     }
 
     #[Route('/vehicule/{slug}', name: 'app_vehicule_show', requirements: ['slug' => '.+-\d+'])]
-    public function show(string $slug, VehiculeRepository $vehiculeRepository): Response
+    public function show(string $slug, VehiculeRepository $vehiculeRepository, DossierRepository $dossierRepository): Response
     {
         preg_match('/(\d+)$/', $slug, $matches);
         $id = $matches[1] ?? null;
@@ -61,8 +62,14 @@ class VehiculeSearchController extends AbstractController
             throw $this->createNotFoundException();
         }
 
+        $dejaUnDossierActif = false;
+        if ($this->getUser() instanceof \App\Entity\Client) {
+            $dejaUnDossierActif = $dossierRepository->hasActiveDossierFor($this->getUser(), $vehicule);
+        }
+
         return $this->render('vehicule_search/show.html.twig', [
             'vehicule' => $vehicule,
+            'dejaUnDossierActif' => $dejaUnDossierActif,
         ]);
     }
 

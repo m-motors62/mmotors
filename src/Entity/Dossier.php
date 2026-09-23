@@ -5,6 +5,8 @@ namespace App\Entity;
 use App\Repository\DossierRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 #[ORM\Entity(repositoryClass: DossierRepository::class)]
 class Dossier
@@ -33,6 +35,14 @@ class Dossier
     #[ORM\ManyToOne]
     #[ORM\JoinColumn(nullable: false)]
     private ?Vehicule $vehicule = null;
+
+    #[ORM\OneToMany(targetEntity: Document::class, mappedBy: 'dossier')]
+    private Collection $documents;
+
+    public function __construct()
+    {
+        $this->documents = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -107,6 +117,35 @@ class Dossier
     public function setVehicule(?Vehicule $vehicule): static
     {
         $this->vehicule = $vehicule;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Document>
+     */
+    public function getDocuments(): Collection
+    {
+        return $this->documents;
+    }
+
+    public function addDocument(Document $document): static
+    {
+        if (!$this->documents->contains($document)) {
+            $this->documents->add($document);
+            $document->setDossier($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDocument(Document $document): static
+    {
+        if ($this->documents->removeElement($document)) {
+            if ($document->getDossier() === $this) {
+                $document->setDossier(null);
+            }
+        }
 
         return $this;
     }

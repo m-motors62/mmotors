@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes dossiers{% endblock %}
+
+{% block body %}
+<a href="{{ path('app_espace_client_dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Retour au tableau de bord</a>
+
+<h1 class="h4 mb-4">Mes dossiers</h1>
+
+{% if dossiers|length == 0 %}
+    <p class="text-muted">Vous n'avez deposé aucun dossier pour le moment.</p>
+{% else %}
+<div class="list-group">
+    {% for dossier in dossiers %}
+    <a href="{{ path('app_espace_client_dossier_show', {'id': dossier.id}) }}" class="list-group-item list-group-item-action">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}</strong>
+                <span class="text-muted small ms-2">{{ dossier.type == 'location' ? 'Location' : 'Achat' }}</span>
+            </div>
+            <div>
+                {% if dossier.statut == 'en_cours' %}
+                    <span class="badge bg-warning">En cours</span>
+                {% elseif dossier.statut == 'valide' %}
+                    <span class="badge bg-success">Validé</span>
+                {% elseif dossier.statut == 'refuse' %}
+                    <span class="badge bg-danger">Refusé</span>
+                {% elseif dossier.statut == 'termine' %}
+                    <span class="badge bg-secondary">Terminé</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="text-muted small mt-1">Déposé le {{ dossier.dateCreation|date('d/m/Y') }}</div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

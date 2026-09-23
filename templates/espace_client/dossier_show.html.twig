@@ -1,0 +1,87 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dossier — {{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}{% endblock %}
+
+{% block body %}
+<a href="{{ path('app_espace_client_dossiers') }}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Retour à mes dossiers</a>
+
+<h1 class="h4 mb-2">{{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}</h1>
+<p class="text-muted mb-4">{{ dossier.type == 'location' ? 'Demande de location' : 'Offre d\'achat' }} — déposé le {{ dossier.dateCreation|date('d/m/Y') }}</p>
+
+<div class="card mb-4" style="max-width: 600px;">
+    <div class="row g-0">
+        {% if dossier.vehicule.vehiculePhotos|length > 0 %}
+        <div class="col-md-4">
+            <img src="/uploads/vehicules/{{ dossier.vehicule.vehiculePhotos|first.filename }}" class="img-fluid rounded-start h-100" style="object-fit: cover;">
+        </div>
+        <div class="col-md-8">
+        {% else %}
+        <div class="col-12">
+        {% endif %}
+            <div class="card-body">
+                <h2 class="h6">Véhicule concerné</h2>
+                <p class="mb-1"><strong>{{ dossier.vehicule.marque }} {{ dossier.vehicule.modele }}</strong></p>
+                <p class="text-muted small mb-1">
+                    {{ dossier.vehicule.motorisation }} — {{ dossier.vehicule.kilometrage }} km
+                    {% if dossier.vehicule.couleur %} — {{ dossier.vehicule.couleur }}{% endif %}
+                </p>
+                <p class="mb-0">
+                    {{ dossier.vehicule.prix }} €
+                    {% if dossier.vehicule.statut == 'location' %}<span class="small text-muted">/mois</span>{% endif %}
+                </p>
+                <a href="{{ path('app_vehicule_show', {'slug': dossier.vehicule.slug}) }}" class="btn btn-sm btn-outline-primary mt-2">Voir la fiche complète</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4" style="max-width: 600px;">
+    <div class="card-body">
+        <h2 class="h6">Statut</h2>
+        {% if dossier.statut == 'en_cours' %}
+            <span class="badge bg-warning fs-6">En cours d'examen</span>
+            <p class="text-muted small mt-2 mb-0">Votre dossier est en cours d'étude par notre équipe.</p>
+        {% elseif dossier.statut == 'valide' %}
+            <span class="badge bg-success fs-6">Validé</span>
+            <p class="text-muted small mt-2 mb-0">Félicitations, votre dossier a été accepté !</p>
+        {% elseif dossier.statut == 'refuse' %}
+            <span class="badge bg-danger fs-6">Refusé</span>
+            {% if dossier.motifRefus %}
+                <p class="text-muted small mt-2 mb-0">Motif : {{ dossier.motifRefus }}</p>
+            {% endif %}
+        {% elseif dossier.statut == 'termine' %}
+            <span class="badge bg-secondary fs-6">Terminé</span>
+            <p class="text-muted small mt-2 mb-0">Ce contrat de location est arrivé à son terme.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-body">
+        <h2 class="h6 mb-3">Documents déposés</h2>
+        <ul class="list-group list-group-flush">
+            {% for document in dossier.documents %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <span>
+                    {{ {
+                        'carte_identite': 'Carte d\'identité',
+                        'justificatif_domicile': 'Justificatif de domicile',
+                        'fiche_paie': 'Fiche de paie'
+                    }[document.typeDocument] ?? document.typeDocument }}
+                </span>
+                <div>
+                    {% if document.statut == 'valide' %}
+                        <span class="badge bg-success me-2">Validé</span>
+                    {% elseif document.statut == 'rejete' %}
+                        <span class="badge bg-danger me-2">Rejeté</span>
+                    {% else %}
+                        <span class="badge bg-secondary me-2">En attente</span>
+                    {% endif %}
+                    <a href="{{ path('app_document_download', {'id': document.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary">Voir</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}

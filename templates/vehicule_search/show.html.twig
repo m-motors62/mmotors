@@ -4,6 +4,9 @@
 
 {% block body %}
 <a href="{{ path('app_vehicule_search') }}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Retour aux résultats</a>
+{% if app.user %}
+<a href="{{ path('app_espace_client_dashboard') }}" class="btn btn-outline-secondary btn-sm mb-3 ms-2">Mon espace</a>
+{% endif %}
 <h1 class="h3 mb-4">{{ vehicule.marque }} {{ vehicule.modele }}</h1>
 
 <div class="row">
@@ -47,9 +50,16 @@
         </ul>
         {% endif %}
 
-        <a href="{{ path('app_vehicule_deposer_dossier', {'slug': vehicule.slug}) }}" class="btn btn-primary">
-            {{ vehicule.statut == 'location' ? 'Faire une demande de location' : 'Faire une offre d\'achat' }}
-        </a>
+        {% if dejaUnDossierActif %}
+            <div class="alert alert-info mb-0">
+                Vous avez déjà un dossier en cours pour ce véhicule.
+                <a href="{{ path('app_espace_client_dossiers') }}">Voir mes dossiers</a>
+            </div>
+        {% else %}
+            <a href="{{ path('app_vehicule_deposer_dossier', {'slug': vehicule.slug}) }}" class="btn btn-primary">
+                {{ vehicule.statut == 'location' ? 'Faire une demande de location' : 'Faire une offre d\'achat' }}
+            </a>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
