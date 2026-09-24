@@ -32,6 +32,15 @@
                 <h2 class="h6">Statut</h2>
                 {% if dossier.statut == 'en_cours' %}
                     <span class="badge bg-warning fs-6">En cours</span>
+
+                    {% if not is_granted('ROLE_ADMIN') %}
+                    <div class="mt-3">
+                        <form method="post" action="{{ path('app_admin_dossier_valider', {'id': dossier.id}) }}" class="d-inline">
+                            <button type="submit" class="btn btn-success btn-sm">Valider le dossier</button>
+                        </form>
+                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#refuserModal">Refuser le dossier</button>
+                    </div>
+                    {% endif %}
                 {% elseif dossier.statut == 'valide' %}
                     <span class="badge bg-success fs-6">Validé</span>
                 {% elseif dossier.statut == 'refuse' %}
@@ -60,11 +69,35 @@
                                 'fiche_paie': 'Fiche de paie'
                             }[document.typeDocument] ?? document.typeDocument }}
                         </span>
-                        <a href="{{ path('app_document_download', {'id': document.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary">Voir</a>
+                        {% if not is_granted('ROLE_ADMIN') %}
+                        <a href="{{ path('app_admin_document_download', {'id': document.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary">Voir</a>
+                        {% else %}
+                        <span class="text-muted small">Accès restreint</span>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
             </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="refuserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Refuser le dossier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ path('app_admin_dossier_refuser', {'id': dossier.id}) }}">
+                <div class="modal-body">
+                    <label for="motif" class="form-label">Motif du refus</label>
+                    <textarea name="motif" id="motif" class="form-control" rows="3" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-danger">Confirmer le refus</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

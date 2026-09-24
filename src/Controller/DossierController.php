@@ -170,7 +170,7 @@ class DossierController extends AbstractController
         $client = $this->getUser() instanceof Client ? $this->getUser() : null;
 
         $estProprietaire = $client && $dossier->getClient()->getId() === $client->getId();
-        $estCommercial = $this->isGranted('ROLE_COMMERCIAL');
+        $estCommercial = $this->isGranted('ROLE_COMMERCIAL') && !$this->isGranted('ROLE_ADMIN');
 
         if (!$estProprietaire && !$estCommercial) {
             throw $this->createAccessDeniedException();
