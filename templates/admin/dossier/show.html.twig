@@ -34,13 +34,24 @@
                     <span class="badge bg-warning fs-6">En cours</span>
 
                     {% if not is_granted('ROLE_ADMIN') %}
-                    <div class="mt-3">
-                        <form method="post" action="{{ path('app_admin_dossier_valider', {'id': dossier.id}) }}" class="d-inline">
-                            <button type="submit" class="btn btn-success btn-sm">Valider le dossier</button>
-                        </form>
-                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#refuserModal">Refuser le dossier</button>
-                    </div>
-                    {% endif %}
+                        {% set tousDocumentsValides = true %}
+                        {% for document in dossier.documents %}
+                            {% if document.statut != 'valide' %}
+                                {% set tousDocumentsValides = false %}
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="mt-3">
+                            {% if tousDocumentsValides %}
+                                <form method="post" action="{{ path('app_admin_dossier_valider', {'id': dossier.id}) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-success btn-sm">Valider le dossier</button>
+                                </form>
+                            {% else %}
+                                <button type="button" class="btn btn-success btn-sm" disabled title="Tous les documents doivent etre valides individuellement">Valider le dossier</button>
+                            {% endif %}
+                            <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#refuserModal">Refuser le dossier</button>
+                        </div>
+                        {% endif %}
                 {% elseif dossier.statut == 'valide' %}
                     <span class="badge bg-success fs-6">Validé</span>
                 {% elseif dossier.statut == 'refuse' %}
@@ -61,20 +72,61 @@
                 <h2 class="h6 mb-3">Documents déposés</h2>
                 <ul class="list-group list-group-flush">
                     {% for document in dossier.documents %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <span>
-                            {{ {
-                                'carte_identite': 'Carte d\'identité',
-                                'justificatif_domicile': 'Justificatif de domicile',
-                                'fiche_paie': 'Fiche de paie'
-                            }[document.typeDocument] ?? document.typeDocument }}
-                        </span>
-                        {% if not is_granted('ROLE_ADMIN') %}
-                        <a href="{{ path('app_admin_document_download', {'id': document.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary">Voir</a>
-                        {% else %}
-                        <span class="text-muted small">Accès restreint</span>
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span>
+                                {{ {
+                                    'carte_identite': 'Carte d\'identité',
+                                    'justificatif_domicile': 'Justificatif de domicile',
+                                    'fiche_paie': 'Fiche de paie'
+                                }[document.typeDocument] ?? document.typeDocument }}
+                            </span>
+                            <div>
+                                {% if document.statut == 'valide' %}
+                                    <span class="badge bg-success me-2">Validé</span>
+                                {% elseif document.statut == 'rejete' %}
+                                    <span class="badge bg-danger me-2">Rejeté</span>
+                                {% else %}
+                                    <span class="badge bg-secondary me-2">En attente</span>
+                                {% endif %}
+
+                                {% if not is_granted('ROLE_ADMIN') %}
+                                <a href="{{ path('app_admin_document_download', {'id': document.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary">Voir</a>
+                                {% else %}
+                                <span class="text-muted small">Accès restreint</span>
+                                {% endif %}
+
+                                {% if not is_granted('ROLE_ADMIN') and dossier.statut == 'en_cours' %}
+                                <button type="button" class="btn btn-sm btn-outline-success btn-valider-document" data-document-id="{{ document.id }}">✓</button>
+                                <button type="button" class="btn btn-sm btn-outline-danger btn-rejeter-document" data-document-id="{{ document.id }}" data-bs-toggle="modal" data-bs-target="#rejeterDocModal{{ document.id }}">✗</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% if document.statut == 'rejete' and document.motifRejet %}
+                        <p class="text-muted small mt-1 mb-0">Motif : {{ document.motifRejet }}</p>
                         {% endif %}
                     </li>
+
+                    {% if not is_granted('ROLE_ADMIN') %}
+                    <div class="modal fade" id="rejeterDocModal{{ document.id }}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title">Rejeter ce document</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <label class="form-label">Motif du rejet</label>
+                                    <textarea class="form-control motif-rejet-input" rows="3"></textarea>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                                    <button type="button" class="btn btn-danger btn-confirmer-rejet" data-document-id="{{ document.id }}" data-bs-dismiss="modal">Confirmer le rejet</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     {% endfor %}
                 </ul>
             </div>
@@ -101,4 +153,48 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    $(document).on('click', '.btn-valider-document', function() {
+        var documentId = $(this).data('document-id');
+        var url = '{{ path('app_admin_dossier_index') }}/document/' + documentId + '/valider';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function() {
+                window.location.reload();
+            }
+        });
+    });
+
+    $(document).on('click', '.btn-confirmer-rejet', function() {
+        var documentId = $(this).data('document-id');
+        var motif = $('#rejeterDocModal' + documentId + ' .motif-rejet-input').val();
+
+        if (!motif) {
+            alert('Le motif est obligatoire.');
+            return;
+        }
+
+        var url = '{{ path('app_admin_dossier_index') }}/document/' + documentId + '/rejeter';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            data: { motif: motif },
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                } else {
+                    alert(response.message);
+                }
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

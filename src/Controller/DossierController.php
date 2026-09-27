@@ -133,7 +133,9 @@ class DossierController extends AbstractController
                 'depot_dossier_vehicule',
                 sprintf('Un dossier de %s a ete depose par %s %s', $typeDossier, $contact->getPrenom(), $contact->getNom()),
                 'Vehicule',
-                $vehicule->getId()
+                $vehicule->getId(),
+                'Dossier',
+                $dossier->getId()
             );
 
             $contact = $client->getContact();

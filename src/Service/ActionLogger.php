@@ -15,13 +15,15 @@ class ActionLogger
     ) {
     }
 
-    public function log(string $actionType, string $description, ?string $targetType = null, ?int $targetId = null): void
+    public function log(string $actionType, string $description, ?string $targetType = null, ?int $targetId = null, ?string $targetType2 = null, ?int $targetId2 = null): void
     {
         $log = new ActionLog();
         $log->setActionType($actionType);
         $log->setDescription($description);
         $log->setTargetType($targetType);
         $log->setTargetId($targetId);
+        $log->setTargetType2($targetType2);
+        $log->setTargetId2($targetId2);
         $log->setCreatedAt(new \DateTimeImmutable());
 
         $currentUser = $this->security->getUser();

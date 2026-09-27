@@ -57,9 +57,15 @@ class AdminDossierController extends AbstractController
     #[Route('/{id}/valider', name: 'app_admin_dossier_valider', requirements: ['id' => '\d+'], methods: ['POST'])]
     public function valider(Dossier $dossier, EntityManagerInterface $entityManager, ActionLogger $actionLogger, MailerInterface $mailer): Response
     {
-        
         if ($this->isGranted('ROLE_ADMIN')) {
-            throw $this->createAccessDeniedException('Les administrateurs ne peuvent pas traiter les dossiers.');
+            throw $this->createAccessDeniedException();
+        }
+
+        foreach ($dossier->getDocuments() as $document) {
+            if ($document->getStatut() !== 'valide') {
+                $this->addFlash('danger', 'Tous les documents doivent etre valides individuellement avant de valider le dossier.');
+                return $this->redirectToRoute('app_admin_dossier_show', ['id' => $dossier->getId()]);
+            }
         }
 
         $dossier->setStatut('valide');
@@ -156,5 +162,73 @@ class AdminDossierController extends AbstractController
         }
 
         return $this->file($filePath, $document->getNomFichier(), \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_INLINE);
+    }
+
+    #[Route('/document/{id}/valider', name: 'app_admin_document_valider', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function validerDocument(Document $document, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $document->setStatut('valide');
+        $document->setMotifRejet(null);
+        $entityManager->flush();
+
+        $actionLogger->log(
+            'validation_document',
+            sprintf('A valide un document (%s) du dossier de %s %s', $document->getTypeDocument(), $document->getDossier()->getClient()->getContact()->getPrenom(), $document->getDossier()->getClient()->getContact()->getNom()),
+            'Dossier',
+            $document->getDossier()->getId()
+        );
+
+        return $this->json(['success' => true]);
+    }
+
+    #[Route('/document/{id}/rejeter', name: 'app_admin_document_rejeter', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function rejeterDocument(Document $document, Request $request, EntityManagerInterface $entityManager, ActionLogger $actionLogger, MailerInterface $mailer): Response
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $motif = $request->request->get('motif');
+
+        if (!$motif) {
+            return $this->json(['success' => false, 'message' => 'Un motif est obligatoire.'], 422);
+        }
+
+        $document->setStatut('rejete');
+        $document->setMotifRejet($motif);
+        $entityManager->flush();
+
+        $dossier = $document->getDossier();
+        $contact = $dossier->getClient()->getContact();
+
+        $actionLogger->log(
+            'rejet_document',
+            sprintf('A rejete un document (%s) du dossier de %s %s (motif : %s)', $document->getTypeDocument(), $contact->getPrenom(), $contact->getNom(), $motif),
+            'Dossier',
+            $dossier->getId()
+        );
+
+        $labelType = [
+            'carte_identite' => 'Carte d\'identite',
+            'justificatif_domicile' => 'Justificatif de domicile',
+            'fiche_paie' => 'Fiche de paie',
+        ][$document->getTypeDocument()] ?? $document->getTypeDocument();
+
+        $email = (new Email())
+            ->from('m-motors@freemaxi.fr')
+            ->to($contact->getEmail())
+            ->subject('Un document de votre dossier M-Motors necessite votre attention')
+            ->text("Bonjour {$contact->getPrenom()},\n\nLe document \"{$labelType}\" de votre dossier necessite d'etre redepose.\nMotif : {$motif}\n\nConnectez-vous a votre espace client pour le remplacer.\n\nCordialement,\nL'equipe M-Motors");
+
+        try {
+            $mailer->send($email);
+        } catch (\Symfony\Component\Mailer\Exception\TransportExceptionInterface $e) {
+        }
+
+        return $this->json(['success' => true]);
     }
 }

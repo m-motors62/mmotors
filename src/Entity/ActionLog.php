@@ -32,6 +32,12 @@ class ActionLog
     #[ORM\ManyToOne]
     private ?User $actor = null;
 
+    #[ORM\Column(length: 50, nullable: true)]
+    private ?string $targetType2 = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $targetId2 = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -105,6 +111,30 @@ class ActionLog
     public function setActor(?User $actor): static
     {
         $this->actor = $actor;
+
+        return $this;
+    }
+
+    public function getTargetType2(): ?string
+    {
+        return $this->targetType2;
+    }
+
+    public function setTargetType2(?string $targetType2): static
+    {
+        $this->targetType2 = $targetType2;
+
+        return $this;
+    }
+
+    public function getTargetId2(): ?int
+    {
+        return $this->targetId2;
+    }
+
+    public function setTargetId2(?int $targetId2): static
+    {
+        $this->targetId2 = $targetId2;
 
         return $this;
     }

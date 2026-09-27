@@ -90,7 +90,12 @@
                 {% for entree in historique %}
                 <div class="list-group-item">
                     <div class="small text-muted">{{ entree.createdAt|date('d/m/Y H:i') }}</div>
-                    <div>{{ entree.description }}</div>
+                    <div>
+                        {{ entree.description }}
+                        {% if entree.targetType2 == 'Dossier' and entree.targetId2 %}
+                            <a href="{{ path('app_admin_dossier_show', {'id': entree.targetId2}) }}" class="ms-1">Voir le dossier</a>
+                        {% endif %}
+                    </div>
                     {% if entree.actor %}
                         <div class="small text-muted">par {{ entree.actor.contact.prenom }} {{ entree.actor.contact.nom }}</div>
                     {% endif %}
