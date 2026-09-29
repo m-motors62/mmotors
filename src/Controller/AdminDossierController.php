@@ -44,8 +44,12 @@ class AdminDossierController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_admin_dossier_show', requirements: ['id' => '\d+'])]
-    public function show(Dossier $dossier, ActionLogger $actionLogger): Response
+    public function show(Dossier $dossier, ActionLogger $actionLogger, DossierRepository $dossierRepository, ActionLogRepository $actionLogRepository): Response
     {
+        $derniereActivite = $dossierRepository->getLastActivityDate($dossier);
+        $derniereConsultation = $actionLogRepository->getLastConsultationDate($dossier->getId());
+        $aTraiterIds = (!$derniereConsultation || $derniereActivite > $derniereConsultation) ? [$dossier->getId()] : [];
+
         /** @var \App\Entity\User $currentUser */
         $currentUser = $this->getUser();
 
@@ -60,6 +64,7 @@ class AdminDossierController extends AbstractController
 
         return $this->render('admin/dossier/show.html.twig', [
             'dossier' => $dossier,
+            'aTraiterIds' => $aTraiterIds,
         ]);
     }
 
@@ -71,6 +76,10 @@ class AdminDossierController extends AbstractController
         }
 
         foreach ($dossier->getDocuments() as $document) {
+            if ($document->isEstRemplace()) {
+                continue;
+            }
+
             if ($document->getStatut() !== 'valide') {
                 $this->addFlash('danger', 'Tous les documents doivent etre valides individuellement avant de valider le dossier.');
                 return $this->redirectToRoute('app_admin_dossier_show', ['id' => $dossier->getId()]);
@@ -180,6 +189,10 @@ class AdminDossierController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
+        if ($document->isEstRemplace()) {
+            return $this->json(['success' => false, 'message' => 'Ce document a ete remplace et ne peut plus etre modifie.'], 422);
+        }
+
         $document->setStatut('valide');
         $document->setMotifRejet(null);
         $entityManager->flush();
@@ -199,6 +212,10 @@ class AdminDossierController extends AbstractController
     {
         if ($this->isGranted('ROLE_ADMIN')) {
             throw $this->createAccessDeniedException();
+        }
+
+        if ($document->isEstRemplace()) {
+            return $this->json(['success' => false, 'message' => 'Ce document a ete remplace et ne peut plus etre modifie.'], 422);
         }
 
         $motif = $request->request->get('motif');
