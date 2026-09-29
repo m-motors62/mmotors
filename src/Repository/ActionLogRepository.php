@@ -91,4 +91,21 @@ class ActionLogRepository extends ServiceEntityRepository
 
         return array_map('intval', array_column($result, 'targetId'));
     }
+
+    public function getLastConsultationDate(int $dossierId): ?\DateTimeImmutable
+    {
+        $log = $this->createQueryBuilder('a')
+            ->andWhere('a.actionType = :type')
+            ->andWhere('a.targetType = :targetType')
+            ->andWhere('a.targetId = :targetId')
+            ->setParameter('type', 'consultation_dossier')
+            ->setParameter('targetType', 'Dossier')
+            ->setParameter('targetId', $dossierId)
+            ->orderBy('a.createdAt', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return $log?->getCreatedAt();
+    }
 }

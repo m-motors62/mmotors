@@ -190,7 +190,7 @@ class DossierController extends AbstractController
 
     #[Route('/document/{id}/remplacer', name: 'app_document_replace', requirements: ['id' => '\d+'])]
     #[IsGranted('ROLE_CLIENT')]
-    public function replaceDocument(Document $document, Request $request, EntityManagerInterface $entityManager, DocumentUploader $documentUploader): Response
+    public function replaceDocument(Document $document, Request $request, EntityManagerInterface $entityManager, DocumentUploader $documentUploader, ActionLogger $actionLogger): Response
     {
         /** @var Client $client */
         $client = $this->getUser();
@@ -238,6 +238,13 @@ class DossierController extends AbstractController
             $entityManager->persist($nouveauDocument);
             $entityManager->flush();
 
+            $actionLogger->log(
+                'remplacement_document',
+                sprintf('A remplace le document "%s" (precedemment rejete)', $this->getLabelTypeDocument($document->getTypeDocument())),
+                'Dossier',
+                $dossier->getId()
+            );
+
             $this->addFlash('success', 'Document remplace avec succes.');
             return $this->redirectToRoute('app_espace_client_dossier_show', ['id' => $dossier->getId()]);
         }
@@ -246,5 +253,14 @@ class DossierController extends AbstractController
             'form' => $form,
             'document' => $document,
         ]);
+    }
+
+    private function getLabelTypeDocument(string $type): string
+    {
+        return [
+            'carte_identite' => 'Carte d\'identite',
+            'justificatif_domicile' => 'Justificatif de domicile',
+            'fiche_paie' => 'Fiche de paie',
+        ][$type] ?? $type;
     }
 }

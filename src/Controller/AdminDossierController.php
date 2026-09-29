@@ -26,11 +26,20 @@ class AdminDossierController extends AbstractController
     public function index(DossierRepository $dossierRepository, ActionLogRepository $actionLogRepository): Response
     {
         $dossiers = $dossierRepository->findAllWithRelations();
-        $consultedIds = $actionLogRepository->getConsultedDossierIds();
+
+        $aTraiterIds = [];
+        foreach ($dossiers as $dossier) {
+            $derniereActivite = $dossierRepository->getLastActivityDate($dossier);
+            $derniereConsultation = $actionLogRepository->getLastConsultationDate($dossier->getId());
+
+            if (!$derniereConsultation || $derniereActivite > $derniereConsultation) {
+                $aTraiterIds[] = $dossier->getId();
+            }
+        }
 
         return $this->render('admin/dossier/index.html.twig', [
             'dossiers' => $dossiers,
-            'consultedIds' => $consultedIds,
+            'aTraiterIds' => $aTraiterIds,
         ]);
     }
 

@@ -38,7 +38,7 @@
         <tr>
             <td>
                 <a href="{{ path('app_admin_dossier_show', {'id': dossier.id}) }}" class="text-decoration-none">
-                    {% if dossier.id not in consultedIds %}
+                    {% if dossier.id in aTraiterIds %}
                         <span class="badge bg-danger rounded-pill me-1" title="Non consulté">&nbsp;</span>
                     {% endif %}
                     {{ dossier.client.contact.prenom }} {{ dossier.client.contact.nom }}

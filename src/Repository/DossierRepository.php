@@ -60,4 +60,17 @@ class DossierRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function getLastActivityDate(Dossier $dossier): \DateTimeImmutable
+    {
+        $derniere = $dossier->getDateCreation();
+
+        foreach ($dossier->getDocuments() as $document) {
+            if ($document->getDateDepot() > $derniere) {
+                $derniere = $document->getDateDepot();
+            }
+        }
+
+        return $derniere;
+    }
 }

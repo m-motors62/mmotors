@@ -7,6 +7,20 @@
 
 <h1 class="h4 mb-2">{{ dossier.client.contact.prenom }} {{ dossier.client.contact.nom }}</h1>
 <p class="text-muted mb-4">{{ dossier.type == 'location' ? 'Demande de location' : 'Offre d\'achat' }} — déposé le {{ dossier.dateCreation|date('d/m/Y H:i') }}</p>
+
+{% set aUnDocumentRemplace = false %}
+{% for document in dossier.documents %}
+    {% if document.estRemplace %}
+        {% set aUnDocumentRemplace = true %}
+    {% endif %}
+{% endfor %}
+
+{% if aUnDocumentRemplace %}
+<div class="alert alert-info">
+    Le client a remplacé au moins un document depuis votre dernière visite. Vérifiez les pièces mises à jour ci-dessous.
+</div>
+{% endif %}
+
 {% if dossier.type == 'location' and dossier.statut == 'en_cours' %}
     {% set joursEcoules = date().diff(dossier.dateCreation).days %}
     {% if joursEcoules > 30 %}

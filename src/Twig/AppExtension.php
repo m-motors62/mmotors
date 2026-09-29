@@ -24,13 +24,18 @@ class AppExtension extends AbstractExtension
 
     public function countUnconsultedDossiers(): int
     {
-        $consultedIds = $this->actionLogRepository->getConsultedDossierIds();
+        $dossiers = $this->dossierRepository->findBy(['statut' => 'en_cours']);
+        $count = 0;
 
-        return $this->dossierRepository->count([
-            'statut' => 'en_cours',
-        ]) - $this->dossierRepository->count([
-            'statut' => 'en_cours',
-            'id' => $consultedIds ?: [0],
-        ]);
+        foreach ($dossiers as $dossier) {
+            $derniereActivite = $this->dossierRepository->getLastActivityDate($dossier);
+            $derniereConsultation = $this->actionLogRepository->getLastConsultationDate($dossier->getId());
+
+            if (!$derniereConsultation || $derniereActivite > $derniereConsultation) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 }
