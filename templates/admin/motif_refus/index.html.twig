@@ -1,0 +1,69 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Motifs de refus{% endblock %}
+
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Motifs de refus</h1>
+    <a href="{{ path('app_admin_motif_refus_new') }}" class="btn btn-primary">Ajouter un motif</a>
+</div>
+
+<table class="table table-striped bg-white">
+    <thead>
+        <tr>
+            <th>Libellé</th>
+            <th>Contexte</th>
+            <th>Type de document</th>
+            <th>Créé par</th>
+            <th class="text-end">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for motif in motifs %}
+        <tr>
+            <td>{{ motif.libelle }}</td>
+            <td>{{ motif.contexte == 'dossier' ? 'Dossier' : 'Document' }}</td>
+            <td>
+                {{ {
+                    'carte_identite': 'Carte d\'identité',
+                    'justificatif_domicile': 'Justificatif de domicile',
+                    'fiche_paie': 'Fiche de paie'
+                }[motif.typeDocument] ?? 'Tous types' }}
+            </td>
+            <td>{{ motif.creePar ? motif.creePar.contact.prenom ~ ' ' ~ motif.creePar.contact.nom : '—' }}</td>
+            <td class="text-end">
+                <a href="{{ path('app_admin_motif_refus_edit', {'id': motif.id}) }}" class="btn btn-sm btn-outline-primary">Modifier</a>
+                <button type="button" class="btn btn-sm btn-outline-danger btn-delete-motif" data-motif-id="{{ motif.id }}">Supprimer</button>
+            </td>
+        </tr>
+        {% else %}
+        <tr>
+            <td colspan="5" class="text-center text-muted">Aucun motif enregistré.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    $(document).on('click', '.btn-delete-motif', function() {
+        if (!confirm('Supprimer ce motif ?')) return;
+
+        var motifId = $(this).data('motif-id');
+        var url = '{{ path('app_admin_motif_refus_index') }}/' + motifId + '/supprimer';
+
+        $.ajax({
+            url: url,
+            method: 'POST',
+            success: function(response) {
+                if (response.success) {
+                    window.location.reload();
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

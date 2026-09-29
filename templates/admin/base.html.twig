@@ -43,6 +43,7 @@
                             {% endif %}
                         </a>
                     </li>
+                    <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_motif_refus_index') }}">Motifs de refus</a></li>
                     {% endif %}
                     {% if is_granted('ROLE_GESTIONNAIRE') %}
                     <li class="nav-item"><a class="nav-link" href="{{ path('app_admin_user_index') }}">Utilisateurs</a></li>
