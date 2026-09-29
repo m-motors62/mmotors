@@ -7,7 +7,16 @@
 
 <h1 class="h4 mb-2">{{ dossier.client.contact.prenom }} {{ dossier.client.contact.nom }}</h1>
 <p class="text-muted mb-4">{{ dossier.type == 'location' ? 'Demande de location' : 'Offre d\'achat' }} — déposé le {{ dossier.dateCreation|date('d/m/Y H:i') }}</p>
-
+{% if dossier.type == 'location' and dossier.statut == 'en_cours' %}
+    {% set joursEcoules = date().diff(dossier.dateCreation).days %}
+    {% if joursEcoules > 30 %}
+    <div class="alert alert-warning">
+        <strong>Attention :</strong> ce dossier a été déposé il y a {{ joursEcoules }} jours.
+        Les fiches de paie fournies ne sont probablement plus assez récentes — envisagez de
+        demander au client de les redéposer avant de valider.
+    </div>
+    {% endif %}
+{% endif %}
 <div class="row">
     <div class="col-md-6">
         <div class="card mb-4">
