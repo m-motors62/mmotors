@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Client;
 use App\Entity\Document;
 use App\Entity\Dossier;
+use App\Form\DocumentReplaceType;
 use App\Form\DossierType;
 use App\Repository\DossierRepository;
 use App\Repository\VehiculeRepository;
@@ -185,5 +186,65 @@ class DossierController extends AbstractController
         }
 
         return $this->file($filePath, $document->getNomFichier(), \Symfony\Component\HttpFoundation\ResponseHeaderBag::DISPOSITION_INLINE);
+    }
+
+    #[Route('/document/{id}/remplacer', name: 'app_document_replace', requirements: ['id' => '\d+'])]
+    #[IsGranted('ROLE_CLIENT')]
+    public function replaceDocument(Document $document, Request $request, EntityManagerInterface $entityManager, DocumentUploader $documentUploader): Response
+    {
+        /** @var Client $client */
+        $client = $this->getUser();
+        $dossier = $document->getDossier();
+
+        if ($dossier->getClient()->getId() !== $client->getId()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if ($document->getStatut() !== 'rejete') {
+            $this->addFlash('warning', 'Seul un document rejete peut etre remplace.');
+            return $this->redirectToRoute('app_espace_client_dossier_show', ['id' => $dossier->getId()]);
+        }
+
+        $maxFileSize = $this->getMaxFileSize($entityManager);
+        $allowedMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+
+        $form = $this->createForm(DocumentReplaceType::class);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $file = $form->get('nouveauFichier')->getData();
+
+            if (!in_array($file->getMimeType(), $allowedMimeTypes, true)) {
+                $this->addFlash('danger', 'Le fichier doit etre au format PDF, JPEG ou PNG.');
+                return $this->redirectToRoute('app_espace_client_dossier_show', ['id' => $dossier->getId()]);
+            }
+
+            if ($file->getSize() > $maxFileSize) {
+                $this->addFlash('danger', 'Le fichier depasse la taille maximale autorisee.');
+                return $this->redirectToRoute('app_espace_client_dossier_show', ['id' => $dossier->getId()]);
+            }
+
+            $document->setEstRemplace(true);
+
+            $filename = $documentUploader->upload($file);
+
+            $nouveauDocument = new Document();
+            $nouveauDocument->setTypeDocument($document->getTypeDocument());
+            $nouveauDocument->setNomFichier($filename);
+            $nouveauDocument->setDateDepot(new \DateTimeImmutable());
+            $nouveauDocument->setStatut('en_attente');
+            $nouveauDocument->setDossier($dossier);
+
+            $entityManager->persist($nouveauDocument);
+            $entityManager->flush();
+
+            $this->addFlash('success', 'Document remplace avec succes.');
+            return $this->redirectToRoute('app_espace_client_dossier_show', ['id' => $dossier->getId()]);
+        }
+
+        return $this->render('dossier/replace_document.html.twig', [
+            'form' => $form,
+            'document' => $document,
+        ]);
     }
 }

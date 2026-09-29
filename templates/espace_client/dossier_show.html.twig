@@ -61,24 +61,33 @@
         <h2 class="h6 mb-3">Documents déposés</h2>
         <ul class="list-group list-group-flush">
             {% for document in dossier.documents %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>
-                    {{ {
-                        'carte_identite': 'Carte d\'identité',
-                        'justificatif_domicile': 'Justificatif de domicile',
-                        'fiche_paie': 'Fiche de paie'
-                    }[document.typeDocument] ?? document.typeDocument }}
-                </span>
-                <div>
-                    {% if document.statut == 'valide' %}
-                        <span class="badge bg-success me-2">Validé</span>
-                    {% elseif document.statut == 'rejete' %}
-                        <span class="badge bg-danger me-2">Rejeté</span>
-                    {% else %}
-                        <span class="badge bg-secondary me-2">En attente</span>
-                    {% endif %}
-                    <a href="{{ path('app_document_download', {'id': document.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary">Voir</a>
+            <li class="list-group-item {{ document.estRemplace ? 'opacity-50' }}">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>
+                        {{ {
+                            'carte_identite': 'Carte d\'identité',
+                            'justificatif_domicile': 'Justificatif de domicile',
+                            'fiche_paie': 'Fiche de paie'
+                        }[document.typeDocument] ?? document.typeDocument }}
+                        {% if document.estRemplace %}<span class="text-muted small">(remplacé)</span>{% endif %}
+                    </span>
+                    <div>
+                        {% if document.statut == 'valide' %}
+                            <span class="badge bg-success me-2">Validé</span>
+                        {% elseif document.statut == 'rejete' %}
+                            <span class="badge bg-danger me-2">Rejeté</span>
+                        {% else %}
+                            <span class="badge bg-secondary me-2">En attente</span>
+                        {% endif %}
+                        <a href="{{ path('app_document_download', {'id': document.id}) }}" target="_blank" class="btn btn-sm btn-outline-primary">Voir</a>
+                        {% if document.statut == 'rejete' and not document.estRemplace %}
+                        <a href="{{ path('app_document_replace', {'id': document.id}) }}" class="btn btn-sm btn-warning">Remplacer</a>
+                        {% endif %}
+                    </div>
                 </div>
+                {% if document.statut == 'rejete' and document.motifRejet %}
+                <p class="text-muted small mt-1 mb-0">Motif : {{ document.motifRejet }}</p>
+                {% endif %}
             </li>
             {% endfor %}
         </ul>

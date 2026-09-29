@@ -33,6 +33,9 @@ class Document
     #[ORM\JoinColumn(nullable: false)]
     private ?Dossier $dossier = null;
 
+    #[ORM\Column(options: ['default' => false])]
+    private ?bool $estRemplace = false;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -106,6 +109,18 @@ class Document
     public function setDossier(?Dossier $dossier): static
     {
         $this->dossier = $dossier;
+
+        return $this;
+    }
+
+    public function isEstRemplace(): ?bool
+    {
+        return $this->estRemplace;
+    }
+
+    public function setEstRemplace(bool $estRemplace): static
+    {
+        $this->estRemplace = $estRemplace;
 
         return $this;
     }
