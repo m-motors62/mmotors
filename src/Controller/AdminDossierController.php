@@ -257,4 +257,34 @@ class AdminDossierController extends AbstractController
 
         return $this->json(['success' => true]);
     }
+
+    #[Route('/{id}/terminer', name: 'app_admin_dossier_terminer', requirements: ['id' => '\d+'], methods: ['POST'])]
+    public function terminer(Dossier $dossier, EntityManagerInterface $entityManager, ActionLogger $actionLogger): Response
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if ($dossier->getStatut() !== 'valide' || $dossier->getType() !== 'location') {
+            $this->addFlash('danger', 'Seul un dossier de location valide peut etre marque comme termine.');
+            return $this->redirectToRoute('app_admin_dossier_show', ['id' => $dossier->getId()]);
+        }
+
+        $dossier->setStatut('termine');
+        $entityManager->flush();
+
+        $contact = $dossier->getClient()->getContact();
+
+        $actionLogger->log(
+            'fin_contrat_dossier',
+            sprintf('A marque comme termine le contrat de location de %s %s', $contact->getPrenom(), $contact->getNom()),
+            'Dossier',
+            $dossier->getId(),
+            'Vehicule',
+            $dossier->getVehicule()->getId()
+        );
+
+        $this->addFlash('success', 'Contrat marque comme termine. Le vehicule peut de nouveau etre bascule si besoin.');
+        return $this->redirectToRoute('app_admin_dossier_show', ['id' => $dossier->getId()]);
+    }
 }
