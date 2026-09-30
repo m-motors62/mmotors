@@ -2,10 +2,34 @@
 
 {% block title %}Journal des actions{% endblock %}
 
+{% block stylesheets %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+{% endblock %}
+
 {% block body %}
 <h1 class="h3 mb-4">Journal des actions</h1>
 
-<table class="table table-striped bg-white">
+<div class="row mb-3">
+    <div class="col-md-3">
+        <label class="form-label small">Filtrer par date</label>
+        <input type="text" id="filter-date-log" class="form-control form-control-sm" value="{{ "now"|date('Y-m-d') }}">
+        <button type="button" id="clear-date-filter" class="btn btn-link btn-sm p-0 mt-1">Voir toutes les dates</button>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small">Filtrer par auteur</label>
+        <select id="filter-auteur-log" class="form-select form-select-sm">
+            <option value="">Tous</option>
+        </select>
+    </div>
+    <div class="col-md-3">
+        <label class="form-label small">Filtrer par action</label>
+        <select id="filter-action-log" class="form-select form-select-sm">
+            <option value="">Toutes</option>
+        </select>
+    </div>
+</div>
+
+<table class="table table-striped bg-white" id="log-table">
     <thead>
         <tr>
             <th>Date</th>
@@ -17,7 +41,7 @@
     <tbody>
         {% for log in logs %}
         <tr>
-            <td class="text-nowrap">{{ log.createdAt|date('d/m/Y H:i') }}</td>
+            <td class="text-nowrap" data-date="{{ log.createdAt|date('Y-m-d') }}">{{ log.createdAt|date('d/m/Y H:i') }}</td>
             <td>
                 {% if log.actor %}
                     {{ log.actor.contact.prenom }} {{ log.actor.contact.nom }}
@@ -37,4 +61,103 @@
         {% endfor %}
     </tbody>
 </table>
+{% endblock %}
+
+{% block javascripts %}
+<script>
+$(document).ready(function() {
+    var table = $('#log-table').DataTable({
+        order: [[0, 'desc']],
+        language: {
+            search: "Rechercher :",
+            lengthMenu: "Afficher _MENU_ actions",
+            info: "_START_ à _END_ sur _TOTAL_ actions",
+            infoEmpty: "Aucune action",
+            paginate: { previous: "Précédent", next: "Suivant" },
+            zeroRecords: "Aucune action ne correspond à la recherche"
+        }
+    });
+
+    var dateFiltre = $('#filter-date-log').val();
+
+    function extraireTexte(value) {
+        return $('<div>').html(value).text().trim();
+    }
+
+    $.fn.dataTable.ext.search.push(function(settings, searchData, index) {
+        var cellDate = $(table.cell(index, 0).node()).data('date');
+        if (dateFiltre && cellDate !== dateFiltre) {
+            return false;
+        }
+        return true;
+    });
+
+    function rafraichirListes() {
+        var auteurActuel = $('#filter-auteur-log').val();
+        var actionActuelle = $('#filter-action-log').val();
+
+        var auteursVisibles = new Set();
+        var actionsVisibles = new Set();
+
+        table.rows({ search: 'applied' }).every(function() {
+            var data = this.data();
+            auteursVisibles.add(extraireTexte(data[1]));
+            actionsVisibles.add(extraireTexte(data[2]));
+        });
+
+        var $selectAuteur = $('#filter-auteur-log');
+        $selectAuteur.empty().append('<option value="">Tous</option>');
+        [...auteursVisibles].sort().forEach(function(a) {
+            $selectAuteur.append('<option value="' + a + '">' + a + '</option>');
+        });
+        if (auteursVisibles.has(auteurActuel)) {
+            $selectAuteur.val(auteurActuel);
+        }
+
+        var $selectAction = $('#filter-action-log');
+        $selectAction.empty().append('<option value="">Toutes</option>');
+        [...actionsVisibles].sort().forEach(function(a) {
+            $selectAction.append('<option value="' + a + '">' + a + '</option>');
+        });
+        if (actionsVisibles.has(actionActuelle)) {
+            $selectAction.val(actionActuelle);
+        }
+    }
+
+    rafraichirListes();
+
+    $('#filter-date-log').on('change', function() {
+        dateFiltre = $(this).val();
+        table.draw();
+        rafraichirListes();
+    });
+
+    $('#clear-date-filter').on('click', function() {
+        $('#filter-date-log').val('');
+        dateFiltre = null;
+        table.draw();
+        rafraichirListes();
+    });
+
+    $('#filter-auteur-log').on('change', function() {
+        table.column(1).search($(this).val(), false, false).draw();
+        rafraichirListes();
+    });
+
+    $('#filter-action-log').on('change', function() {
+        table.column(2).search($(this).val(), false, false).draw();
+        rafraichirListes();
+    });
+});
+</script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+var datesDisponibles = {{ datesDisponibles|json_encode|raw }};
+
+flatpickr('#filter-date-log', {
+    dateFormat: 'Y-m-d',
+    enable: datesDisponibles,
+    defaultDate: datesDisponibles.includes('{{ "now"|date('Y-m-d') }}') ? '{{ "now"|date('Y-m-d') }}' : null,
+});
+</script>
 {% endblock %}

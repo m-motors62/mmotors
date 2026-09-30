@@ -19,8 +19,14 @@ class AdminActionLogController extends AbstractController
 
         $logs = $actionLogRepository->findVisibleFor($currentUser);
 
+        $datesDisponibles = [];
+        foreach ($logs as $log) {
+            $datesDisponibles[$log->getCreatedAt()->format('Y-m-d')] = true;
+        }
+
         return $this->render('admin/action_log/index.html.twig', [
             'logs' => $logs,
+            'datesDisponibles' => array_keys($datesDisponibles),
         ]);
     }
 }
