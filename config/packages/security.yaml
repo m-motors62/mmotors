@@ -51,6 +51,7 @@ security:
         - { path: ^/admin/dashboard, roles: [ROLE_COMMERCIAL, ROLE_GESTIONNAIRE] }
         - { path: ^/admin/journal, roles: [ROLE_COMMERCIAL, ROLE_GESTIONNAIRE] }
         - { path: ^/admin/parametrage, roles: ROLE_ADMIN }
+        - { path: ^/admin/pages, roles: ROLE_ADMIN }
         - { path: ^/admin/utilisateurs, roles: ROLE_GESTIONNAIRE }
         - { path: ^/admin/vehicules, roles: ROLE_COMMERCIAL }
         - { path: ^/admin/clients, roles: ROLE_COMMERCIAL }

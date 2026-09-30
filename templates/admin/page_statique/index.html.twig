@@ -1,0 +1,16 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Pages statiques{% endblock %}
+
+{% block body %}
+<h1 class="h3 mb-4">Pages statiques</h1>
+
+<div class="list-group" style="max-width: 500px;">
+    <a href="{{ path('app_admin_page_statique_edit', {'slug': 'mentions-legales'}) }}" class="list-group-item list-group-item-action">
+        Mentions légales
+    </a>
+    <a href="{{ path('app_admin_page_statique_edit', {'slug': 'cgv'}) }}" class="list-group-item list-group-item-action">
+        Conditions générales de vente
+    </a>
+</div>
+{% endblock %}

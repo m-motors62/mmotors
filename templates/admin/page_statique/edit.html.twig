@@ -1,0 +1,58 @@
+{% extends 'admin/base.html.twig' %}
+
+{% block title %}Modifier {{ page.titre }}{% endblock %}
+
+{% block stylesheets %}
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<style>
+#editor .ql-editor {
+    min-height: 400px;
+    background: white;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+<a href="{{ path('app_admin_page_statique_index') }}" class="btn btn-outline-secondary btn-sm mb-3">&larr; Retour</a>
+
+<h1 class="h3 mb-4">Modifier la page</h1>
+
+<form method="post">
+    <div class="mb-3" style="max-width: 600px;">
+        <label class="form-label">Titre</label>
+        <input type="text" name="titre" class="form-control" value="{{ page.titre }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Contenu</label>
+        <div id="editor">{{ page.contenu|raw }}</div>
+        <input type="hidden" name="contenu" id="contenu-input">
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="submit-btn">Enregistrer</button>
+</form>
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.js"></script>
+<script>
+$(document).ready(function() {
+    var quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [2, 3, false] }],
+                ['bold', 'italic', 'underline'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                ['link'],
+                ['clean']
+            ]
+        }
+    });
+
+    $('#submit-btn').closest('form').on('submit', function() {
+        $('#contenu-input').val(quill.root.innerHTML);
+    });
+});
+</script>
+{% endblock %}

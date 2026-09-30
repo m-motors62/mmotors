@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ page.titre }}{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="h3 mb-4">{{ page.titre }}</h1>
+        <div class="page-contenu">
+            {{ page.contenu|raw }}
+        </div>
+        <p class="text-muted small mt-4">Dernière mise à jour : {{ page.dateModification|date('d/m/Y') }}</p>
+    </div>
+</div>
+{% endblock %}
