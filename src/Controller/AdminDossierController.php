@@ -9,6 +9,7 @@ use App\Service\DocumentUploader;
 use App\Service\ActionLogger;
 use App\Repository\ActionLogRepository;
 use App\Repository\DossierRepository;
+use App\Repository\MotifRefusRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -286,5 +287,13 @@ class AdminDossierController extends AbstractController
 
         $this->addFlash('success', 'Contrat marque comme termine. Le vehicule peut de nouveau etre bascule si besoin.');
         return $this->redirectToRoute('app_admin_dossier_show', ['id' => $dossier->getId()]);
+    }
+
+    #[Route('/api/motifs/{contexte}/{typeDocument}', name: 'app_admin_motifs_api', requirements: ['contexte' => 'dossier|document'], defaults: ['typeDocument' => null])]
+    public function apiMotifs(string $contexte, ?string $typeDocument, MotifRefusRepository $motifRefusRepository): Response
+    {
+        $motifs = $motifRefusRepository->findForContext($contexte, $typeDocument);
+
+        return $this->json(array_map(fn($m) => ['id' => $m->getId(), 'libelle' => $m->getLibelle()], $motifs));
     }
 }

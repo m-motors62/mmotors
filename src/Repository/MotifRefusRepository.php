@@ -16,28 +16,21 @@ class MotifRefusRepository extends ServiceEntityRepository
         parent::__construct($registry, MotifRefus::class);
     }
 
-    //    /**
-    //     * @return MotifRefus[] Returns an array of MotifRefus objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('m.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
+    /**
+     * @return MotifRefus[]
+     */
+    public function findForContext(string $contexte, ?string $typeDocument = null): array
+    {
+        $qb = $this->createQueryBuilder('m')
+            ->andWhere('m.contexte = :contexte')
+            ->setParameter('contexte', $contexte)
+            ->orderBy('m.libelle', 'ASC');
 
-    //    public function findOneBySomeField($value): ?MotifRefus
-    //    {
-    //        return $this->createQueryBuilder('m')
-    //            ->andWhere('m.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+        if ($typeDocument) {
+            $qb->andWhere('m.typeDocument = :type OR m.typeDocument IS NULL')
+                ->setParameter('type', $typeDocument);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
 }

@@ -141,6 +141,9 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
                                 <div class="modal-body">
+                                    <label class="form-label">Motifs prédéfinis</label>
+                                    <div class="d-flex flex-wrap gap-1 mb-3 motifs-suggestions-document" data-type-document="{{ document.typeDocument }}"></div>
+
                                     <label class="form-label">Motif du rejet</label>
                                     <textarea class="form-control motif-rejet-input" rows="3"></textarea>
                                 </div>
@@ -168,6 +171,9 @@
             </div>
             <form method="post" action="{{ path('app_admin_dossier_refuser', {'id': dossier.id}) }}">
                 <div class="modal-body">
+                    <label class="form-label">Motifs prédéfinis</label>
+                    <div id="motifs-suggestions-dossier" class="d-flex flex-wrap gap-1 mb-3"></div>
+
                     <label for="motif" class="form-label">Motif du refus</label>
                     <textarea name="motif" id="motif" class="form-control" rows="3" required></textarea>
                 </div>
@@ -219,6 +225,39 @@ $(document).ready(function() {
                     alert(response.message);
                 }
             }
+        });
+    });
+
+    // Charger les motifs pour le refus de dossier
+    $('#refuserModal').on('show.bs.modal', function() {
+        $.get('{{ path('app_admin_motifs_api', {'contexte': 'dossier'}) }}', function(motifs) {
+            var $container = $('#motifs-suggestions-dossier');
+            $container.empty();
+            motifs.forEach(function(m) {
+                var $btn = $('<button type="button" class="btn btn-sm btn-outline-secondary"></button>').text(m.libelle);
+                $btn.on('click', function() {
+                    $('#motif').val(m.libelle);
+                });
+                $container.append($btn);
+            });
+        });
+    });
+
+    // Charger les motifs pour le rejet de document (a chaque ouverture de modale)
+    $(document).on('show.bs.modal', '[id^="rejeterDocModal"]', function() {
+        var $container = $(this).find('.motifs-suggestions-document');
+        var typeDocument = $container.data('type-document');
+        var $textarea = $(this).find('.motif-rejet-input');
+
+        $.get('{{ path('app_admin_motifs_api', {'contexte': 'document', 'typeDocument': '__TYPE__'}) }}'.replace('__TYPE__', typeDocument), function(motifs) {
+            $container.empty();
+            motifs.forEach(function(m) {
+                var $btn = $('<button type="button" class="btn btn-sm btn-outline-secondary"></button>').text(m.libelle);
+                $btn.on('click', function() {
+                    $textarea.val(m.libelle);
+                });
+                $container.append($btn);
+            });
         });
     });
 });
