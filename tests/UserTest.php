@@ -57,4 +57,23 @@ class UserTest extends TestCase
 
         return $user;
     }
+
+    public function testRoleUserToujoursPresent(): void
+    {
+        $user = new User();
+        $user->setRoles(['ROLE_COMMERCIAL']);
+
+        $this->assertContains('ROLE_USER', $user->getRoles());
+    }
+
+    public function testRoleUserNonDuplique(): void
+    {
+        $user = new User();
+        $user->setRoles(['ROLE_USER', 'ROLE_COMMERCIAL']);
+
+        $roles = $user->getRoles();
+        $occurrences = array_count_values($roles)['ROLE_USER'];
+
+        $this->assertSame(1, $occurrences);
+    }
 }
