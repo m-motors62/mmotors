@@ -29,14 +29,19 @@ class AdminAccessKeySubscriber implements EventSubscriberInterface
         }
 
         $request = $event->getRequest();
+        $path = $request->getPathInfo();
 
-        if (!str_starts_with($request->getPathInfo(), '/admin')) {
+        if (!str_starts_with($path, '/admin')) {
+            return;
+        }
+
+        // Routes exemptees : protegees par leur propre mecanisme (token unique envoye par email)
+        if (str_starts_with($path, '/admin/reinitialiser')) {
             return;
         }
 
         $session = $request->getSession();
 
-        // Deja verifie sur cette session, on ne redemande pas la cle a chaque requete
         if ($session->get(self::SESSION_KEY)) {
             return;
         }
@@ -45,7 +50,6 @@ class AdminAccessKeySubscriber implements EventSubscriberInterface
         $expectedKey = $setting?->getSettingValue();
 
         if (!$expectedKey) {
-            // Pas de cle configuree : on n'active pas la restriction
             return;
         }
 
