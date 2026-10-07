@@ -35,7 +35,11 @@ class AdminPasswordResetController extends AbstractController
 
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre mot de passe a ete defini. Vous pouvez vous connecter.');
+            // Le token etait deja une preuve de legitimite suffisante, on valide la session
+            // pour eviter un nouveau blocage par la cle d'acces juste apres
+            $request->getSession()->set('admin_access_key_verified', true);
+
+            $this->addFlash('success', 'Votre mot de passe a ete redefini. Vous pouvez vous connecter.');
             return $this->redirectToRoute('app_admin_login');
         }
 
