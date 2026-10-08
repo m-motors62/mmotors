@@ -127,4 +127,12 @@ class ActionLogRepositoryTest extends KernelTestCase
         $connection->executeStatement("DELETE FROM user WHERE email LIKE 'zztest-%@test.com'");
         $connection->executeStatement("DELETE FROM contact WHERE email LIKE 'zztest-%@test.com'");
     }
+
+    public function testDemandeDeReinitialisationInvisiblePourLeCommercial(): void
+    {
+        $this->creerLog('ZZTEST demande reinitialisation', 'demande_reinitialisation_mdp', null);
+
+        $this->assertNotContains('ZZTEST demande reinitialisation', $this->descriptionsVisiblesPar($this->commercial));
+        $this->assertContains('ZZTEST demande reinitialisation', $this->descriptionsVisiblesPar($this->admin));
+    }
 }

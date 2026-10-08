@@ -20,6 +20,7 @@ class ActionLogRepository extends ServiceEntityRepository
     private const USER_ACTION_TYPES = [
         'connexion',
         'creation_utilisateur',
+        'demande_reinitialisation_mdp',
         'modification_utilisateur',
         'desactivation_utilisateur',
         'reactivation_utilisateur',
