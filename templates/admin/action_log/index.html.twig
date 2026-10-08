@@ -1,3 +1,4 @@
+
 {% extends 'admin/base.html.twig' %}
 
 {% block title %}Journal des actions{% endblock %}
@@ -54,10 +55,6 @@
             </td>
             <td>{{ log.description }}</td>
         </tr>
-        {% else %}
-        <tr>
-            <td colspan="4" class="text-center text-muted">Aucune action enregistree.</td>
-        </tr>
         {% endfor %}
     </tbody>
 </table>
@@ -70,6 +67,7 @@ $(document).ready(function() {
         order: [[0, 'desc']],
         language: {
             search: "Rechercher :",
+            emptyTable: "Aucune action enregistrée.",
             lengthMenu: "Afficher _MENU_ actions",
             info: "_START_ à _END_ sur _TOTAL_ actions",
             infoEmpty: "Aucune action",

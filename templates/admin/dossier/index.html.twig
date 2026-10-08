@@ -59,10 +59,6 @@
             </td>
             <td>{{ dossier.dateCreation|date('d/m/Y H:i') }}</td>
         </tr>
-        {% else %}
-        <tr>
-            <td colspan="5" class="text-center text-muted">Aucun dossier enregistré.</td>
-        </tr>
         {% endfor %}
     </tbody>
 </table>
@@ -75,6 +71,7 @@ $(document).ready(function() {
         order: [[4, 'desc']],
         language: {
             search: "Rechercher :",
+            emptyTable: "Aucun dossier enregistré.",
             lengthMenu: "Afficher _MENU_ dossiers",
             info: "_START_ à _END_ sur _TOTAL_ dossiers",
             infoEmpty: "Aucun dossier",

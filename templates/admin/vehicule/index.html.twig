@@ -93,10 +93,6 @@
                 </div>
             </td>
         </tr>
-        {% else %}
-        <tr>
-            <td colspan="7" class="text-center text-muted">Aucun véhicule enregistré.</td>
-        </tr>
         {% endfor %}
     </tbody>
 </table>
@@ -123,6 +119,7 @@ $(document).ready(function() {
         order: [[5, 'desc']],
         language: {
             search: "Rechercher :",
+            emptyTable: "Aucun véhicule enregistré.",
             lengthMenu: "Afficher _MENU_ véhicules",
             info: "_START_ à _END_ sur _TOTAL_ véhicules",
             infoEmpty: "Aucun véhicule",

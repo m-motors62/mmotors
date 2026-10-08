@@ -32,10 +32,6 @@
                 <button type="button" class="btn btn-sm btn-outline-danger btn-delete-client" data-client-id="{{ client.id }}">Supprimer</button>
             </td>
         </tr>
-        {% else %}
-        <tr>
-            <td colspan="4" class="text-center text-muted">Aucun client enregistré.</td>
-        </tr>
         {% endfor %}
     </tbody>
 </table>
@@ -46,6 +42,7 @@
 $(document).ready(function() {
     $('#client-table').DataTable({
         language: {
+            emptyTable: "Aucun client enregistré.",
             search: "Rechercher :",
             lengthMenu: "Afficher _MENU_ clients",
             info: "_START_ à _END_ sur _TOTAL_ clients",
