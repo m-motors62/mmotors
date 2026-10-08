@@ -6,12 +6,13 @@ use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Security\Core\User\EquatableInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
 #[UniqueEntity(fields: ['email'], message: 'Cet email est deja utilise par un autre compte.')]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface, EquatableInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -217,5 +218,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         }
 
         return false;
+    }
+
+    public function isEqualTo(UserInterface $user): bool
+    {
+        if (!$user instanceof self) {
+            return false;
+        }
+
+        // Un compte desactive en base perd sa session ouverte a la requete suivante
+        if (!$user->isActive()) {
+            return false;
+        }
+
+        if ($this->getUserIdentifier() !== $user->getUserIdentifier()) {
+            return false;
+        }
+
+        // Selon la configuration, la session ne garde qu'une empreinte crc32c du mot de passe
+        $memeMotDePasse = $this->password === $user->getPassword()
+            || hash_equals((string) $this->password, hash('crc32c', (string) $user->getPassword()));
+        if (!$memeMotDePasse) {
+            return false;
+        }
+
+        // Un changement de role met fin aux sessions ouvertes avec les anciens roles
+        $anciens = $this->getRoles();
+        $nouveaux = $user->getRoles();
+        sort($anciens);
+        sort($nouveaux);
+
+        return $anciens === $nouveaux;
     }
 }
