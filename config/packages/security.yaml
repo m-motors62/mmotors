@@ -24,6 +24,7 @@ security:
             lazy: true
             pattern: ^/admin
             provider: app_user_provider
+            user_checker: App\Security\UserChecker
             form_login:
                 login_path: app_admin_login
                 check_path: app_admin_login
