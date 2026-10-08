@@ -65,7 +65,7 @@ class VehiculeType extends AbstractType
                 'constraints' => [new NotBlank(), new Positive()],
             ])
             ->add('prix', MoneyType::class, [
-                'label' => 'Prix mensuel de location',
+                'label' => $options['statut'] === 'vente' ? 'Prix de vente' : 'Prix mensuel de location',
                 'currency' => 'EUR',
                 'constraints' => [new NotBlank(), new Positive()],
             ])
@@ -114,6 +114,7 @@ class VehiculeType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Vehicule::class,
             'is_edit' => false,
+            'statut' => null,
         ]);
     }
 }

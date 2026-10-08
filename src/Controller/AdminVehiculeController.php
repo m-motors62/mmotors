@@ -53,7 +53,7 @@ class AdminVehiculeController extends AbstractController
     private function handleNewVehicule(Request $request, EntityManagerInterface $entityManager, VehiculePhotoUploader $photoUploader, ActionLogger $actionLogger, string $statut): Response
     {
         $vehicule = new Vehicule();
-        $form = $this->createForm(VehiculeType::class, $vehicule);
+        $form = $this->createForm(VehiculeType::class, $vehicule, ['statut' => $statut]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -113,6 +113,7 @@ class AdminVehiculeController extends AbstractController
     {
         $form = $this->createForm(VehiculeType::class, $vehicule, [
             'is_edit' => true,
+            'statut' => $vehicule->getStatut(),
         ]);
         $form->handleRequest($request);
 
