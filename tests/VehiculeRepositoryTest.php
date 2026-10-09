@@ -143,6 +143,19 @@ class VehiculeRepositoryTest extends KernelTestCase
         $this->assertContains($archive->getId(), $avecArchives);
     }
 
+    public function testLesListesTiennentCompteDuPrixEtDuKilometrage(): void
+    {
+        $this->creerJeuDeDonneesFiltres();
+
+        $marques = $this->repository->getMarquesDisponibles(prixMax: 1000);
+        $this->assertContains('ZzTestAlpha', $marques);
+        $this->assertNotContains('ZzTestDelta', $marques);
+
+        $this->assertSame(['Clio'], $this->repository->getModelesDisponibles('ZzTestAlpha', kilometrageMax: 20000));
+        $this->assertSame(['location'], $this->repository->getModesDisponibles('ZzTestAlpha', prixMax: 1000));
+        $this->assertSame(['Essence'], $this->repository->getMotorisationsDisponibles('ZzTestAlpha', prixMax: 1000));
+    }
+
     private function creerJeuDeDonneesFiltres(): void
     {
         $this->creerVehicule('ZzTestAlpha', 'Clio', 'Essence', 'location', 200, 10000, 'ZT-101-AA');

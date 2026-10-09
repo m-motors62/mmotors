@@ -84,9 +84,9 @@ class VehiculeRepository extends ServiceEntityRepository
     /**
      * @return string[]
      */
-    public function getModesDisponibles(?string $marque = null, ?string $modele = null, ?string $motorisation = null): array
+    public function getModesDisponibles(?string $marque = null, ?string $modele = null, ?string $motorisation = null, ?float $prixMax = null, ?int $kilometrageMax = null): array
     {
-        $qb = $this->baseFiltreQuery(null, $marque, $modele, null, null, $motorisation)
+        $qb = $this->baseFiltreQuery(null, $marque, $modele, $prixMax, $kilometrageMax, $motorisation)
             ->select('DISTINCT v.statut')
             ->orderBy('v.statut', 'ASC');
 
@@ -96,9 +96,9 @@ class VehiculeRepository extends ServiceEntityRepository
     /**
      * @return string[]
      */
-    public function getMarquesDisponibles(?string $modele = null, ?string $motorisation = null, ?string $mode = null): array
+    public function getMarquesDisponibles(?string $modele = null, ?string $motorisation = null, ?string $mode = null, ?float $prixMax = null, ?int $kilometrageMax = null): array
     {
-        $qb = $this->baseFiltreQuery($mode, null, $modele, null, null, $motorisation)
+        $qb = $this->baseFiltreQuery($mode, null, $modele, $prixMax, $kilometrageMax, $motorisation)
             ->select('DISTINCT v.marque')
             ->orderBy('v.marque', 'ASC');
 
@@ -108,9 +108,9 @@ class VehiculeRepository extends ServiceEntityRepository
     /**
      * @return string[]
      */
-    public function getModelesDisponibles(?string $marque = null, ?string $motorisation = null, ?string $mode = null): array
+    public function getModelesDisponibles(?string $marque = null, ?string $motorisation = null, ?string $mode = null, ?float $prixMax = null, ?int $kilometrageMax = null): array
     {
-        $qb = $this->baseFiltreQuery($mode, $marque, null, null, null, $motorisation)
+        $qb = $this->baseFiltreQuery($mode, $marque, null, $prixMax, $kilometrageMax, $motorisation)
             ->select('DISTINCT v.modele')
             ->orderBy('v.modele', 'ASC');
 
@@ -120,9 +120,9 @@ class VehiculeRepository extends ServiceEntityRepository
     /**
      * @return string[]
      */
-    public function getMotorisationsDisponibles(?string $marque = null, ?string $modele = null, ?string $mode = null): array
+    public function getMotorisationsDisponibles(?string $marque = null, ?string $modele = null, ?string $mode = null, ?float $prixMax = null, ?int $kilometrageMax = null): array
     {
-        $qb = $this->baseFiltreQuery($mode, $marque, $modele, null, null, null)
+        $qb = $this->baseFiltreQuery($mode, $marque, $modele, $prixMax, $kilometrageMax, null)
             ->select('DISTINCT v.motorisation')
             ->andWhere('v.motorisation IS NOT NULL')
             ->orderBy('v.motorisation', 'ASC');

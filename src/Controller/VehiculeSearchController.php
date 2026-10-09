@@ -24,12 +24,15 @@ class VehiculeSearchController extends AbstractController
         $kilometrageMax = $request->query->get('kilometrage_max');
         $motorisation = $request->query->get('motorisation');
 
+        $prix = $prixMax ? (float) $prixMax : null;
+        $km = $kilometrageMax ? (int) $kilometrageMax : null;
+
         $vehicules = $vehiculeRepository->search(
             mode: $mode,
             marque: $marque,
             modele: $modele,
-            prixMax: $prixMax ? (float) $prixMax : null,
-            kilometrageMax: $kilometrageMax ? (int) $kilometrageMax : null,
+            prixMax: $prix,
+            kilometrageMax: $km,
             motorisation: $motorisation,
         );
 
@@ -43,11 +46,39 @@ class VehiculeSearchController extends AbstractController
                 'kilometrage_max' => $kilometrageMax,
                 'motorisation' => $motorisation,
             ],
-            'modesDisponibles' => $vehiculeRepository->getModesDisponibles($marque, $modele, $motorisation),
-            'marquesDisponibles' => $vehiculeRepository->getMarquesDisponibles($modele, $motorisation, $mode),
-            'modelesDisponibles' => $vehiculeRepository->getModelesDisponibles($marque, $motorisation, $mode),
-            'motorisationsDisponibles' => $vehiculeRepository->getMotorisationsDisponibles($marque, $modele, $mode),
+            'modesDisponibles' => $this->avecSelection(
+                $vehiculeRepository->getModesDisponibles($marque, $modele, $motorisation, $prix, $km),
+                in_array($mode, ['location', 'vente'], true) ? $mode : null
+            ),
+            'marquesDisponibles' => $this->avecSelection($vehiculeRepository->getMarquesDisponibles($modele, $motorisation, $mode, $prix, $km), $marque),
+            'modelesDisponibles' => $this->avecSelection($vehiculeRepository->getModelesDisponibles($marque, $motorisation, $mode, $prix, $km), $modele),
+            'motorisationsDisponibles' => $this->avecSelection($vehiculeRepository->getMotorisationsDisponibles($marque, $modele, $mode, $prix, $km), $motorisation),
         ]);
+    }
+
+    /**
+     * Garde la valeur choisie dans sa liste, même si les autres filtres l'excluent :
+     * sans cela, un filtre sans résultat viderait les listes et semblerait effacer la sélection.
+     *
+     * @param string[] $liste
+     * @return string[]
+     */
+    private function avecSelection(array $liste, ?string $selection): array
+    {
+        if (!$selection) {
+            return $liste;
+        }
+
+        foreach ($liste as $valeur) {
+            if (mb_strtolower((string) $valeur) === mb_strtolower($selection)) {
+                return $liste;
+            }
+        }
+
+        $liste[] = $selection;
+        sort($liste, SORT_STRING | SORT_FLAG_CASE);
+
+        return $liste;
     }
 
     #[Route('/vehicule/{slug}', name: 'app_vehicule_show', requirements: ['slug' => '.+-\d+'])]
