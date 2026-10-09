@@ -54,4 +54,15 @@ class SecurityTest extends WebTestCase
 
         $this->assertResponseIsSuccessful();
     }
+
+    public function testLeBoutonDeReinitialisationNApparaitQueSiUnFiltreEstActif(): void
+    {
+        $client = static::createClient();
+
+        $client->request('GET', '/vehicules');
+        $this->assertSelectorNotExists('#reset-filtres');
+
+        $client->request('GET', '/vehicules?mode=location');
+        $this->assertSelectorExists('#reset-filtres');
+    }
 }

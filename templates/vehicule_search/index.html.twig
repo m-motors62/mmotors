@@ -7,8 +7,14 @@
     <div class="col-md-3">
         <div class="card">
             <div class="card-body">
-                <h2 class="h6">Filtres</h2>
-                <form method="get" id="filter-form" action="{{ path('app_vehicule_search') }}">
+                {% set filtreActif = mode or marque or modele or filtres.motorisation or filtres.prix_max or filtres.kilometrage_max %}
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h6 mb-0">Filtres</h2>
+                    {% if filtreActif %}
+                    <a id="reset-filtres" href="{{ path('app_vehicule_search') }}" class="btn btn-outline-secondary btn-sm">Réinitialiser</a>
+                    {% endif %}
+                </div>
+                <form method="get" id="filter-form" autocomplete="off" action="{{ path('app_vehicule_search') }}">
                     <div class="mb-3">
                         <label class="form-label d-block">Mode</label>
                         <div class="btn-group w-100" role="group">
